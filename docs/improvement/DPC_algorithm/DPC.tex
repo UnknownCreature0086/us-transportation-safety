@@ -1,0 +1,177 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{physics}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{geometry}
+\usepackage{xcolor}
+\geometry{a4paper, margin=0.8in}
+\usepackage{listings}
+\definecolor{grey}{rgb}{0.8,0.8,0.8}
+\definecolor{darkgreen}{rgb}{0,0.3,0}
+\definecolor{darkblue}{rgb}{0,0,0.3}
+\def\lstbasicfont{\fontfamily{pcr}\selectfont\footnotesize}
+\renewcommand{\lstlistingname}{}
+\lstset{%
+    numbers=none,
+    numberstyle=\small,%
+    showstringspaces=false,
+    showspaces=false,%
+    tabsize=4,%
+    frame=lines,%
+    basicstyle={\footnotesize\lstbasicfont},%
+    keywordstyle=\color{darkblue}\bfseries,%
+    identifierstyle=,%
+    commentstyle=\color{darkgreen},%\itshape,%
+    stringstyle=\color{black},%
+    breaklines=true,%
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}
+}
+\lstloadlanguages{C,C++,Java,Matlab,Python,Mathematica}
+
+\title{Comparison of DPC Algorithm Variants}
+\author{Xiuyuan Lu}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This document compares the original Density Peak Clustering (DPC) algorithm with three modified versions developed for improved robustness and automation. The comparison covers mathematical formulations, implementation differences, and performance characteristics.
+
+\section{Mathematical Foundations}
+
+\subsection{Original DPC Algorithm}
+The original DPC relies on two core metrics:
+
+\begin{itemize}
+    \item \textbf{Local Density} ($\rho$):
+    \begin{equation}
+        \rho_i = \sum_{j \neq i} e^{-\left(\frac{d_{ij}}{d_c}\right)^2}
+    \end{equation}
+    or alternatively using a cutoff kernel:
+    \begin{equation}
+        \rho_i = \abs{\{j \mid d_{ij} < d_c\}}
+    \end{equation}
+    
+    \item \textbf{Minimum Distance to Higher Density} ($\delta$):
+    \begin{equation}
+        \delta_i = \begin{cases}
+            \min_{j:\rho_j > \rho_i} d_{ij} & \text{if } \exists j, \rho_j > \rho_i \\
+            \max_j d_{ij} & \text{otherwise}
+        \end{cases}
+    \end{equation}
+\end{itemize}
+
+Cluster centers are manually selected from the decision graph ($\gamma_i = \rho_i \times \delta_i$).
+
+\subsection{Modified Versions}
+Key improvements in your versions:
+
+\begin{itemize}
+    \item \textbf{Density Calculation}:
+    \begin{equation}
+        \rho_i = \frac{1}{\text{percentile/mean}(\text{KNN distances}) + \epsilon}
+    \end{equation}
+    
+    \item \textbf{Automated Center Selection}:
+    \begin{equation}
+        n_{\text{clusters}} = \text{KneeLocator}(\gamma \text{ curve})
+    \end{equation}
+\end{itemize}
+
+\section{Detailed Comparison}
+
+\subsection{Density Calculation}
+\begin{table}[H]
+\centering
+\caption{Density Calculation Methods}
+\begin{tabular}{llll}
+\toprule
+\textbf{Version} & \textbf{Formula} & \textbf{Parameters} & \textbf{Characteristics} \\
+\midrule
+Original DPC & $\rho_i = \sum e^{-(d_{ij}/d_c)^2}$ & Manual $d_c$ & Sensitive to cutoff \\
+Initial & Same as original & Auto $d_c$ (15\% percentile) & Partial automation \\
+Modified & $1/\text{KNN percentile}(25\%)$ & $k=2$ neighbors & Local adaptation \\
+Final & $1/\text{mean(KNN distances)}$ & $k=5$ neighbors & Smoother but outlier-sensitive \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cluster Center Selection}
+\begin{table}[H]
+\centering
+\caption{Center Selection Strategies}
+\begin{tabular}{lll}
+\toprule
+\textbf{Version} & \textbf{Method} & \textbf{Automation} \\
+\midrule
+Original & Manual selection from decision graph & None \\
+Initial & Top 8 $\gamma$ points & Fixed count \\
+Modified & Top 2 + distance-constrained selection & Semi-automatic \\
+Final & KneeLocator + target range (8-9) & Full automation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Noise Handling}
+\begin{table}[H]
+\centering
+\caption{Noise Processing Approaches}
+\begin{tabular}{lll}
+\toprule
+\textbf{Version} & \textbf{Method} & \textbf{Robustness} \\
+\midrule
+Original & No explicit handling & Noise affects results \\
+Initial & Nearest non-noise assignment & Basic filtering \\
+Modified/Final & Density threshold ($\rho > \bar{\rho}$) + nearest neighbor & Improved filtering \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Performance Characteristics}
+
+\begin{table}[H]
+\centering
+\caption{Overall Comparison}
+\begin{tabular}{llll}
+\toprule
+\textbf{Feature} & \textbf{Original} & \textbf{Initial} & \textbf{Modified/Final} \\
+\midrule
+Parameter sensitivity & High (manual $d_c$) & Medium & Low \\
+Automation level & None & Partial & High \\
+Noise robustness & Poor & Medium & Good \\
+High-dimension handling & Poor & Good (with PCA) & Excellent \\
+Code complexity & Low & Medium & High/Medium \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+The evolutionary improvements demonstrate:
+
+\begin{itemize}
+    \item Replacement of manual steps with data-driven automation
+    \item Enhanced robustness through KNN-based density estimation
+    \item Better noise handling via density thresholds
+    \item Maintained interpretability while increasing applicability
+\end{itemize}
+
+The final version provides the best balance between automation and performance for practical applications.
+
+\section{Appendix}
+Here are the source codes for the original version, the modified version, and the final version of the DPC algorithm. 
+\lstinputlisting[language=Python, caption={original version}]{../../USdata/clustering_DPC.py}
+\lstinputlisting[language=Python, caption={modified version}]{../../USdata/clustering_DPC_modified.py}
+\lstinputlisting[language=Python, caption={final version}]{../../USdata/clustering_DPC_remodified.py}
+
+\end{document}

@@ -1,0 +1,169 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage[a4paper, margin=0.8in]{geometry}
+\everymath{\displaystyle}
+\usepackage{xcolor}
+\usepackage{listings}
+\definecolor{grey}{rgb}{0.8,0.8,0.8}
+\definecolor{darkgreen}{rgb}{0,0.3,0}
+\definecolor{darkblue}{rgb}{0,0,0.3}
+\def\lstbasicfont{\fontfamily{pcr}\selectfont\footnotesize}
+\renewcommand{\lstlistingname}{}
+\lstset{%
+    numbers=none,
+    numberstyle=\small,%
+    showstringspaces=false,
+    showspaces=false,%
+    tabsize=4,%
+    frame=lines,%
+    basicstyle={\footnotesize\lstbasicfont},%
+    keywordstyle=\color{darkblue}\bfseries,%
+    identifierstyle=,%
+    commentstyle=\color{darkgreen},%\itshape,%
+    stringstyle=\color{black},%
+    breaklines=true,%
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}
+}
+\lstloadlanguages{C,C++,Java,Matlab,Python,Mathematica}
+
+
+\title{DOBI: Mathematical Formulation and Parameter Analysis}
+\author{Xiuyuan Lu}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+The Dombi-Bonferroni (DOBI) method is a novel multi-criteria decision making (MCDM) technique that combines Dombi operations with Bonferroni mean operators. This document presents its mathematical formulation and analyzes the effects of its key parameters.
+
+\section{Mathematical Formulation}
+
+\subsection{Data Normalization}
+The method begins with normalized decision matrix $X^*$ where:
+
+\begin{equation}
+x_{ij}^* = 
+\begin{cases}
+\frac{x_{ij}}{\max(x_j)} & \text{(benefit criterion)} \\
+\frac{\min(x_j)}{x_{ij}} + \frac{\max(x_j)}{\max(x_j)} + \frac{\min(x_j)}{\max(x_j)} & \text{(cost criterion)}
+\end{cases}
+\end{equation}
+
+\subsection{Additive Normalization (f-values)}
+\begin{equation}
+f_{ij} = \frac{x_{ij}^*}{\sum_{j=1}^n x_{ij}^*}
+\end{equation}
+
+\subsection{Dombi-Bonferroni Functions}
+
+\subsubsection{Weighted Averaging Function (Z1)}
+\begin{equation}
+Z1_i = \frac{\sum_{j=1}^n x_{ij}^*}{1 + \left[\frac{\sum_{j=1}^n \sum_{\substack{k=1 \\ k \neq j}}^n \frac{w_j w_k}{1-w_j} \left(\psi_1 \left(\frac{1-f_{ij}}{f_{ij}}\right)^\zeta + \psi_2 \left(\frac{1-f_{ik}}{f_{ik}}\right)^\zeta\right)}{\psi_1 + \psi_2}\right]^{1/\zeta}}
+\end{equation}
+
+\subsubsection{Weighted Geometric Function (Z2)}
+\begin{equation}
+Z2_i = \frac{\sum_{j=1}^n x_{ij}^*}{1 + \left[\frac{\sum_{j=1}^n \sum_{\substack{k=1 \\ k \neq j}}^n \frac{w_j w_k}{1-w_j} \left(\psi_1 \left(\frac{f_{ij}}{1-f_{ij}}\right)^\zeta + \psi_2 \left(\frac{f_{ik}}{1-f_{ik}}\right)^\zeta\right)}{\psi_1 + \psi_2}\right]^{1/\zeta}}
+\end{equation}
+
+\subsection{Integrated DOBI Value}
+\begin{equation}
+\Re_i = \frac{Z1_i + Z2_i}{1 + \left[0.5\left(\frac{1-Z1_i}{Z1_i}\right)^\delta + 0.5\left(\frac{1-Z2_i}{Z2_i}\right)^\delta\right]^{1/\delta}}
+\end{equation}
+
+\subsection{Ranking}
+\begin{equation}
+\text{Rank}_i = \text{rank}(\Re_i, \text{ascending=False})
+\end{equation}
+
+\section{Parameter Analysis}
+
+\begin{table}[h]
+\centering
+\caption{DOBI Parameters and Their Effects}
+\begin{tabular}{lll}
+\toprule
+Parameter & Role & Impact \\
+\midrule
+$\psi_1,\psi_2$ & Bonferroni parameters & Control inter-criteria compensation \\
+$\zeta$ & Dombi operator parameter & Adjusts aggregation behavior \\
+$\delta$ & Integration parameter & Balances Z1 and Z2 contributions \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Effects of Parameter Settings}
+
+\subsubsection{$\psi_1$ and $\psi_2$ (Bonferroni Parameters)}
+\begin{itemize}
+\item \textbf{Symmetry}: When $\psi_1 = \psi_2$, equal weight to all interactions
+\item \textbf{Compensation}: Higher values increase compensation effects
+\item \textbf{Robustness}: Asymmetric values ($\psi_1 \neq \psi_2$) increase sensitivity to specific criteria
+\end{itemize}
+
+\subsubsection{$\zeta$ (Dombi Operator Parameter)}
+\begin{equation}
+\lim_{\zeta \to 0} \rightarrow \text{maximum-like operation}, \quad \lim_{\zeta \to \infty} \rightarrow \text{minimum-like operation}
+\end{equation}
+
+\begin{itemize}
+\item Small $\zeta$: More sensitive to high values
+\item Large $\zeta$: More sensitive to low values
+\item $\zeta=1$: Linear compensation
+\end{itemize}
+
+\subsubsection{$\delta$ (Integration Parameter)}
+\begin{itemize}
+\item $\delta=1$: Equal treatment of Z1 and Z2
+\item $\delta>1$: Emphasizes larger values
+\item $\delta<1$: Reduces impact of extreme values
+\end{itemize}
+
+\section{Recommended Parameter Settings}
+
+\begin{table}[h]
+\centering
+\caption{Parameter Setting Scenarios}
+\begin{tabular}{lllll}
+\toprule
+Scenario & $\psi_1,\psi_2$ & $\zeta$ & $\delta$ & Application \\
+\midrule
+Default & 1,1 & 1 & 1 & General purpose \\
+Robust & 1,1 & 2 & 0.5 & Noisy data \\
+Dominance & 2,2 & 0.5 & 2 & Key criteria emphasis \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Implementation Notes}
+The Python implementation features:
+\begin{itemize}
+\item Direct matrix operations for efficiency
+\item Flexible parameter configuration
+\item Batch processing for temporal data
+\end{itemize}
+
+For sensitivity analysis, we recommend:
+
+\begin{verbatim}
+param_combinations = [
+    (1, 1, 1, 1),  # Baseline
+    (1, 2, 1, 1),  # Asymmetric psi
+    (1, 1, 2, 1),  # Increased zeta
+    (1, 1, 1, 2)   # Increased delta
+]
+\end{verbatim}
+
+\section{Appendix}
+Here is the source code for DOBI implementation in Python:
+\lstinputlisting[language=Python, caption={}]{../../USdata/aggregating_DOBI_simplified.py}
+
+\end{document}

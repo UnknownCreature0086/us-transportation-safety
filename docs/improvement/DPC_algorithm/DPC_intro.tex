@@ -1,0 +1,200 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[labelfont=bf]{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+
+\title{Improved Density Peaks Clustering (DPC) Algorithm}
+\author{Xiuyuan Lu}
+
+\begin{document}
+
+\maketitle
+
+\section{Algorithm Overview}
+The improved DPC algorithm enhances the original method by Rodriguez and Laio (2014) through automated center selection, KNN-based density estimation, and noise reassignment. Key steps are outlined below.
+
+\section{Step-by-Step Breakdown}
+
+\subsection{Data Preprocessing}
+\begin{itemize}
+    \item \textbf{Purpose}: Reduce dimensionality for visualization while clustering in original space.
+    \item \textbf{Equation}: 
+    \begin{equation}
+        \mathbf{X}_{\text{PCA}} = \text{PCA}(\mathbf{X}, \text{n\_components}=2)
+    \end{equation}
+    \item \textbf{Implementation}: 
+    \begin{verbatim}
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(data)  # For visualization only
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Density Estimation (KNN-based)}
+\begin{itemize}
+    \item \textbf{Original DPC}: 
+    \begin{equation}
+        \rho_i = \sum_j \chi(d_{ij} - d_c)
+    \end{equation}
+    \item \textbf{Improved Equation}: 
+    \begin{equation}
+        \rho_i = \frac{1}{\text{mean}(d_{i,\text{KNN}})}
+    \end{equation}
+    \item \textbf{Code}:
+    \begin{verbatim}
+        k = 5
+        nbrs = NearestNeighbors(n_neighbors=k).fit(data)
+        knn_distances, _ = nbrs.kneighbors(data)
+        density = 1 / (np.mean(knn_distances, axis=1) + 1e-10)
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Delta Calculation}
+\begin{itemize}
+    \item \textbf{Equation}:
+    \begin{equation}
+        \delta_i = 
+        \begin{cases} 
+            \min_{j:\rho_j > \rho_i}(d_{ij}) & \text{if } \exists j \text{ s.t. } \rho_j > \rho_i \\
+            \max_j(d_{ij}) & \text{otherwise}
+        \end{cases}
+    \end{equation}
+    \item \textbf{Implementation}:
+    \begin{verbatim}
+        distances = squareform(pdist(data))
+        delta = np.zeros_like(density)
+        for i in range(len(data)):
+            higher_density = density > density[i]
+            delta[i] = np.min(distances[i, higher_density]) 
+                if higher_density.any() else np.max(distances[i])
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Automated Center Selection}
+\begin{itemize}
+    \item \textbf{Metric}:
+    \begin{equation}
+        \gamma_i = \rho_i \times \delta_i
+    \end{equation}
+    \item \textbf{Selection}:
+    \begin{enumerate}
+        \item Sort \(\gamma_i\) in descending order.
+        \item Use \texttt{KneeLocator} to find the elbow point.
+        \item Enforce cluster count within a target range (e.g., 8–9).
+    \end{enumerate}
+    \item \textbf{Code}:
+    \begin{verbatim}
+        gamma = density * delta
+        n_clusters = enforce_cluster_count(gamma)  # Knee detection
+        centers = np.argsort(-gamma)[:n_clusters]
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Cluster Assignment (K-means Initialization)}
+\begin{itemize}
+    \item \textbf{Improvement}: Replace original single-step assignment with K-means initialized at selected centers.
+    \item \textbf{Code}:
+    \begin{verbatim}
+        kmeans = KMeans(n_clusters=n_clusters, init=data.iloc[centers], 
+                        n_init=1, random_state=42)
+        dpc_labels = kmeans.fit_predict(data)
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Noise Reassignment}
+\begin{itemize}
+    \item \textbf{Conditions}:
+    \begin{itemize}
+        \item Noise ratio \(< 20\%\).
+        \item Density \(> \text{mean density}\).
+    \end{itemize}
+    \item \textbf{Code}:
+    \begin{verbatim}
+        def assign_noise_to_clusters(data, labels, density, max_noise_ratio=0.2):
+            noise_mask = (labels == -1)
+            if np.sum(noise_mask) / len(data) > max_noise_ratio:
+                return labels
+            nbrs = NearestNeighbors(n_neighbors=1).fit(data[~noise_mask])
+            _, indices = nbrs.kneighbors(data[noise_mask])
+            labels[noise_mask] = labels[~noise_mask][indices.flatten()]
+            return labels
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Evaluation}
+\begin{itemize}
+    \item \textbf{Metric}: Silhouette Coefficient.
+    \item \textbf{Code}:
+    \begin{verbatim}
+        silhouette_avg = silhouette_score(data, dpc_labels)
+    \end{verbatim}
+\end{itemize}
+
+\section{Key Improvements Summary}
+\begin{table}[h]
+    \centering
+    \caption{Comparison of Original vs. Improved DPC}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Step} & \textbf{Original DPC} & \textbf{Improved DPC} \\
+        \midrule
+        Density & Fixed \(d_c\) cutoff & KNN-adaptive \\
+        Centers & Manual selection & Automated via \(\gamma_i\) knee detection \\
+        Assignment & Nearest neighbor & K-means initialization \\
+        Noise & Permanent halo & Conditional reassignment \\
+        Validation & None & Silhouette score \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section*{Appendix}
+\begin{algorithm}
+\caption{Improved Density Peaks Clustering (DPC)}
+\label{alg:dpc}
+\begin{algorithmic}[1]
+\State \textbf{Input:} 
+    Data matrix $\mathbf{X} \in \mathbb{R}^{n \times m}$,
+    $k$ (KNN neighbors),
+    $\text{target\_range} = (k_{\min}, k_{\max})$
+\State \textbf{Output:} 
+    Cluster labels $\mathbf{y}$, optimal cluster count $k^*$
+
+\Procedure{ComputeDensity}{$\mathbf{X}, k$}
+    \For{each point $\mathbf{x}_i \in \mathbf{X}$}
+        \State $d_{\text{KNN}} \gets \text{distances to } k \text{ nearest neighbors of } \mathbf{x}_i$
+        \State $\rho_i \gets 1 / (\text{mean}(d_{\text{KNN}}) + \epsilon)$ \Comment{KNN-based density}
+    \EndFor
+    \Return $\boldsymbol{\rho}$
+\EndProcedure
+
+\Procedure{ComputeDelta}{$\mathbf{X}, \boldsymbol{\rho}$}
+    \State $\mathbf{D} \gets \text{pairwise\_distances}(\mathbf{X})$
+    \For{each point $\mathbf{x}_i \in \mathbf{X}$}
+        \If{$\exists j \text{ where } \rho_j > \rho_i$}
+            \State $\delta_i \gets \min(\mathbf{D}_{i,j} \forall j \text{ with } \rho_j > \rho_i)$
+        \Else
+            \State $\delta_i \gets \max(\mathbf{D}_{i,:})$ \Comment{Global max distance}
+        \EndIf
+    \EndFor
+    \Return $\boldsymbol{\delta}$
+\EndProcedure
+
+\Procedure{ClusterDPC}{$\mathbf{X}, k, \text{target\_range}$}
+    \State $\boldsymbol{\rho} \gets \text{ComputeDensity}(\mathbf{X}, k)$
+    \State $\boldsymbol{\delta} \gets \text{ComputeDelta}(\mathbf{X}, \boldsymbol{\rho})$
+    \State $\boldsymbol{\gamma} \gets \boldsymbol{\rho} \odot \boldsymbol{\delta}$ \Comment{Element-wise product}
+    \State $k^* \gets \text{KneeLocator}(\text{sorted}(\boldsymbol{\gamma}))$
+    \State $k^* \gets \text{clamp}(k^*, \text{target\_range})$
+    \State $\text{centers} \gets \text{top } k^* \text{ indices in } \boldsymbol{\gamma}$
+    \State $\mathbf{y} \gets \text{KMeans}(k^*, \text{init}=\mathbf{X}[\text{centers}]).\text{fit\_predict}(\mathbf{X})$
+    \State $\mathbf{y} \gets \text{ReassignNoise}(\mathbf{X}, \mathbf{y}, \boldsymbol{\rho})$
+    \State \Return $\mathbf{y}, k^*$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}
