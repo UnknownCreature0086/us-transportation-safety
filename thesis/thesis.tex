@@ -4,25 +4,28 @@
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{float}
-\usepackage{comment}
 \usepackage{titlesec}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage[dvipsnames]{xcolor}
-\usepackage[UTF8, scheme=plain]{ctex}
 \usepackage[margin=1in]{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{placeins}
+\graphicspath{{../outputs/figures/index/}{../outputs/robustness/normalization/}{../outputs/robustness/weighting/}{../outputs/robustness/aggregating/}{../outputs/figures/decompose_indicator/}{../outputs/figures/deconstruct_performance/}{../outputs/figures/deconstruct_change/}{../outputs/figures/decompose_DPC_group/}}
 \everymath{\displaystyle}
 \linespread{1.2}
 \setlength{\parindent}{0em}
 \setlength{\parskip}{5pt}
 \author{Xiuyuan Lu}
 
-\newenvironment{remark}{\par\noindent\textcolor{PineGreen}{\textbf{Comment: }}\color{PineGreen}\ignorespaces}{\par}
-
-
+\newcommand{\placeholder}[1]{\par\noindent\textcolor{gray}{\textit{[#1]}}\par}
+\newcommand{\missingsection}{\placeholder{Section content to be completed.}}
 
 \titleclass{\subsubsubsection}{straight}[\subsection]
 \newcounter{subsubsubsection}[subsubsection]
@@ -32,252 +35,980 @@
 \makeatletter
 \setcounter{secnumdepth}{4}
 \setcounter{tocdepth}{4}
-\makeatletter
 \newcommand{\l@subsubsubsection}{\@dottedtocline{4}{7em}{4em}}
-\makeatother
 \makeatother
 
 \title{Innovative IDOCRIW-DOBI-DPC model with KNN-Density and Adaptive Thresholding: An application to transport safety planning for US States}
+
 \begin{document}
 \maketitle
 
 \begin{abstract}
-
+\missingsection
 \end{abstract}
-\begin{remark}
-参考文献什么时候写?引用的格式?暂时先用comment放在文中防止忘记.
-\end{remark}
+
+\tableofcontents
+\newpage
 
 \section{Introduction}
 Decision-making is one of the most critical and fundamental functions of management, as the achievement of organizational goals heavily depends on its effectiveness. Among various decision-making methodologies, Multiple Criteria Decision Making (MCDM) serves as a comprehensive framework for addressing real-world challenges, particularly due to its ability to deliver stable, reliable, and efficient results, which are qualities essential for effective decision-making. This is especially crucial in fields such as road safety, where robust and well-justified decisions are imperative. However, selecting the most suitable MCDM method from existing models has been a persistent challenge for decision-makers, primarily due to the inherent input sensitivity and uncertainty of these models. Consequently, there is a pressing need to develop advanced MCDM frameworks that minimize such limitations, ensuring high robustness and reliability in decision making.
 
-In doing so, prior researches have laid a solid foundation for MCDM applications in road safety. However, research gaps still remain. First, there remains a lack of universal evaluation frameworks for diverse decision making contexts. Second, most studies focused on single countries or small regions, and the complexities of cross-national diversity in factors such as regulations, infrastructure, and cultural preferences are yet to be accounted for. Third, few studies integrate weighting, aggregation, and clustering into a unified pipeline, though processes like grouping, deconstruction, and decomposition are equally essential. Finally, traditional methods like DPC suffer from manual center selection and noise sensitivity, facing uncertainty in small-to-medium datasets. Addressing these gaps is pivotal for advancing both the theoretical rigor and practical applicability of MCDM frameworks in road safety assessment. 
+In doing so, prior researches have laid a solid foundation for MCDM applications in road safety. However, research gaps still remain. First, there remains a lack of universal evaluation frameworks for diverse decision making contexts. Second, most studies focused on single countries or small regions, and the complexities of cross-national diversity in factors such as regulations, infrastructure, and cultural preferences are yet to be accounted for. Third, few studies integrate weighting, aggregation, and clustering into a unified pipeline, though processes like grouping, deconstruction, and decomposition are equally essential. Finally, traditional methods like DPC suffer from manual center selection and noise sensitivity, facing uncertainty in small-to-medium datasets. Addressing these gaps is pivotal for advancing both the theoretical rigor and practical applicability of MCDM frameworks in road safety assessment.
 
-To this end, the current study integrated IDOCRIW (Integrated Determination of Objective CRIteria Weights), DOBI (DOmbi BonferronI), and DPC (Density Peak Clustering), proposing an innovative model of IDOCRIW-DOBI-DPC enhanced with KNN-density and Adaptive Thresholding. Through the development and application of the model, this study contributes to the industrial community in several ways. 
+To this end, the current study integrated IDOCRIW (Integrated Determination of Objective CRIteria Weights), DOBI (DOmbi BonferronI), and DPC (Density Peak Clustering), proposing an innovative model of IDOCRIW-DOBI-DPC enhanced with KNN-density and Adaptive Thresholding. Through the development and application of the model, this study contributes to the industrial community in several ways.
 \begin{itemize}
-\item First, a set of regional specific Safety Performance Indicators (SPIs) is constructed, which lays the foundation for the comprehensive assessment of road safety in the United States. 
-\item Second, the DPC algorithm is enhanced with KNN-density and Adaptive Thresholding, which balances between automation and performance for practical applications. The modification enhances robustness through KNN-based density estimation and better handles noise via adaptive density thresholds. 
-\item Additionally, the study provides insights for US states to formulate future road safety strategies and operational measures, ensuring data-driven and context-aware policy making. 
+\item First, a set of regional specific Safety Performance Indicators (SPIs) is constructed, which lays the foundation for the comprehensive assessment of road safety in the United States.
+\item Second, the DPC algorithm is enhanced with KNN-density and Adaptive Thresholding, which balances between automation and performance for practical applications. The modification enhances robustness through KNN-based density estimation and better handles noise via adaptive density thresholds.
+\item Additionally, the study provides insights for US states to formulate future road safety strategies and operational measures, ensuring data-driven and context-aware policy making.
 \end{itemize}
 The remainder of this paper is organized as follows: Section 2 review the institutional capacity in road safety management, and the MCDM procedure. Section 3 presents the set of SPIs, as well as data in this study. Section 4 describes the innovative model of IDOCRIW-DOBI-DPC enhanced with KNN-Density and Adaptive Thresholding, while results and robustness analysis are included in Section 5. The practical guidance and implications of this study is discussed in Section 6. Finally, Section 7 summarizes the key findings and research contributions, critically examines the study's limitations, and proposes potential directions for future investigation.
 
-\section{Literature Review}
+\section{Literature review}
 
-\subsection{US states institutional compacity in transport safety management}
-\begin{remark}
-\textit{The Vision Zero Handbook}
-https://doi.org/10.1007/978-3-030-76505-7\_19
-\end{remark}
-Over the past few decades, various organizaitons have been consistently collecting and analyzing road safty data, offering practical guidance to states and cities for specific improvements. \\
-On a macro level, \dots \\
-On a meso-level, \dots \\
-At the micro level, \dots \\
-\begin{remark}
-Literature Review 的工作量似乎较大\dots 故暂缓.
-\end{remark}
+\subsection{US states institutional capacity in transport safety management}
+\missingsection
 
 \subsection{MCDM procedure}
 
 \subsubsection{Uncertainty of MCDM process}
+Multiple Criteria Decision Making (MCDM) is a critical subfield of operations research, management science, and decision theory that systematically evaluates and ranks alternatives based on multiple, often competing, criteria. It is widely applied where trade-offs between conflicting goals must be carefully balanced. The MCDM techniques are indispensable for decision makers, reducing subjectivity resulting from the psychology--human interaction.
+
+Previous studies incorporating MCDM techniques for road safety analysis in US states have laid a solid foundation for assessing road safety performance at a regional level. However, challenges in MCDM include handling uncertainty (e.g., incomplete data, subjective judgments), avoiding rank reversals, and ensuring robustness through sensitivity analysis. In the weighting process, which can be influenced by the preferences, perspectives, and biases of decision makers, uncertainty arises when balancing the subjective and objective weights of indicators. Model uncertainty emerges from the choice of MCDM technique and sensitivity to normalization methods or threshold settings, producing different aggregating results. Additionally, overlooked criteria, redundant attributes, or poorly defined alternatives may also lead to flawed conclusions.
+
+To address these uncertainties, it is essential to propose advanced approaches that integrate fuzzy logic, machine learning, stochastic modeling, and robustness analysis to address ambiguity and dynamic environments. By providing a transparent, quantitative, and repeatable decision-making framework, MCDM helps organizations and policymakers make informed, defensible choices in complex, multi-stakeholder scenarios.
 
 \subsubsection{DPC applications and limitations}
+Density peaks clustering (DPC) has proven useful across many domains since its introduction, thanks to its ability to find clusters of arbitrary shapes without prior knowledge for the number of clusters. The algorithm works well for neuroscience applications like grouping neuron activity patterns, remote sensing tasks such as land cover classification from satellite images, and biological studies including cell type identification from gene expression data. DPC is a tool used in both computer vision and transportation engineering, with applications in image segmentation and traffic flow analysis, respectively.
 
+Despite its advantages, DPC faces limitations. First, it is sensitive to the choice of parameters, particularly the cutoff distance $d_{c}$. The selection of cluster centers, though relying on decision graphs, could be influenced by human judgement and may not always represent the true structure of data, thus affecting clustering results. Furthermore, DPC tends to struggle when dealing with datasets that exhibit complex manifold structures. For example, datasets with varying densities or curved manifolds may lead to poor performance in identifying clusters. Moreover, in DPC algorithm, the misclassification of a single data point might cause a series of incorrect assignments, which is known as the ``Domino Effect'', undermining the accuracy of the clustering process. In addition, the pairwise distance calculation in this algorithm results in high computational complexity, particularly when dealing with large datasets. Also, in high-dimensional data, the Euclidean distance measures become less meaningful, further reducing the clustering effectiveness.
 
-\subsection{Research gaps}
-\begin{remark}
-是否和Introduction有重复? 可否删去? \\
-或者将MCDM相关的Research gaps放在这一部分?
-\end{remark}
-
+Researchers have developed various modifications to address these weaknesses. Some focus on improving how density gets calculated, moving from global measures to local approaches using nearest neighbors or natural neighbor concepts. For example, the use of local density estimation techniques, such as K-nearest neighbors (KNN), which reduces the sensitivity to the cutoff distance and improves performance on datasets with uneven densities. In addition, advances have been made in automating the selection of cluster centers. Approaches like Shared Nearest Neighbors (SNN) allow DPC to automatically detect density peaks without requiring manual intervention, improving both the accuracy and reliability of clustering results. These changes help the algorithm better handle varying densities while reducing sensitivity to parameter choices. Other improvements target the assignment process itself, incorporating fuzzy logic or similarity-based searches to prevent error propagation. To handle high-dimensional data, techniques such as Principal Component Analysis (PCA) have been integrated into DPC to reduce the dimensionality of the data before clustering, ensuring that distance measures remain meaningful. Replacing traditional distance measures with more data-dependent similarity metrics has also led to better clustering outcomes, particularly when dealing with complex and high-dimensional datasets. Researchers have also focused on improving computational efficiency through methods like sparse matrix optimization, which reduces memory usage, and fast nearest-neighbor search techniques, which accelerate the algorithm's execution. To further enhance efficiency, techniques like sub-cluster merging have been introduced, where data is first divided into smaller sub-clusters before being merged, which helps to optimize both the quality and speed of the clustering process.
 
 \section{Data}
-\subsection{Index construction}
 
-\begin{remark}
-这个案例中的SPI是怎么定的?
-\end{remark}
+\subsection{Index construction}
+In this study, eight indicators were applied, namely, highway safety expenditures (HSE), registered vehicles (RV), licensed drivers (LD), vehicle miles traveled (VMT), road length (RL), road condition (RC), seat belt usage (SB), and fatality rate per 100 million vehicle miles traveled (FR). The indicators were adopted directly from an US empirical study, which has been approved to be significantly associated with road safety performance.
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=6in]{index.png}
+\includegraphics[width=\textwidth]{index.png}
+\caption{Safety Performance Indicator (SPI) hierarchy for US transport safety assessment.}
+\label{fig:index}
 \end{figure}
-\begin{remark}
-通过draw.io绘制.
-\end{remark}
+
 \subsection{Data sources}
+The data used in this study were primarily obtained from the National Highway Traffic Safety Administration (NHTSA) and US Bureau of Transportation Statistics (BTS). More specifically, the data pertaining to $X1$, $X2$, $X3$, $X4$, $X5$, and $X6$ were obtained from the BTS database, while the data related to $X7$ were obtained from the NHTSA report ``Seat Belt Use --- Use Rates in the States and Territories''. Moreover, the data for $X8$ were acquired from the NHTSA database.
 
-交代数据来源
-\begin{remark}
-    Suggested APA Format Citation:
-
-    National Center for Statistics and Analysis. (2024, December). Traffic safety facts 2022: A compilation of motor vehicle traffic crash data (Report No. DOT HS 813 656). National Highway Traffic Safety Administration.
-
-但是还有一部分数据不是我收集的,需要重新交代数据来源吗?
-
-在另一篇\textit{Measurement of road safety situation by CRITIC-TODIM-NMF: A lesson system of legislation and regulation for the United States}发现其余的数据来自: \\
-U.S. Bureau of Transportation Statistics, State Transportation Statistics. 2021, U.S. Bureau of Transportation Statistics (BTS). \\
-https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/812947 \\
-https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811651 \\
-National Highway Traffic Safety Administration, Research Testing Databases. 2021, National Highway Traffic Safety Administration (NHTSA).
-\end{remark}
-\subsection{Data cleaning}
-
-交代数据的预处理（奇异值剔除、缺失值替换）
-\begin{remark}
-没有遇到缺失值是不是这一部分就不用写了?
-\end{remark}
 \section{Methodology}
+
 \subsection{IDOCRIW}
-\begin{remark}
-Original: \textit{The Recalculation of the Weights of Criteria in MCDM Methods Using the Bayes Approach}\\
-https://doi.org/10.3390/sym10060205
+The IDOCRIW method, developed by Zavadskas and Podvezko in 2016, was formulated as an advanced hybrid weighting technique for solving MCDM challenges. This approach seeks to overcome the shortcomings of conventional weighting methods by integrating two complementary objective techniques---Entropy and CILOS---to deliver more comprehensive and reliable criterion weights. It specifically addresses the limitations of single-method approaches by simultaneously considering data dispersion and criterion interdependencies, while also handling both positive and negative attribute values through systematic normalization.
 
-Where I got the summarized version of the IDOCRIW workflow: \textit{MADM} \\
-https://doi.org/10.1007/978-3-030-15009-9
-\end{remark}
-The IDOCRIW method, developed by Zavadskas and Podvezko in 2016, was formulated as an advanced hybrid weighting technique for solving MCDM challenges. This approach seeks to overcome the shortcomings of conventional weighting methods by integrating two complementary objective techniques—Entropy and CILOS—to deliver more comprehensive and reliable criterion weights. It specifically addresses the limitations of single-method approaches by simultaneously considering data dispersion and criterion interdependencies, while also handling both positive and negative attribute values through systematic normalization.
-
-The IDOCRIW method demonstrates distinct advantages compared to standalone weighting techniques like Entropy or CILOS. First, it mitigates subjective bias through its dual-objective foundation, whereas traditional Entropy weights may overlook criterion interactions. Second, its compensatory nature allows for balanced trade-offs between attributes—a feature absent in non-compensatory methods. Unlike basic normalization techniques, IDOCRIW's square matrix transformation and impact loss calculation provide robust handling of extreme values while preserving subtle data variations. Under identical conditions, this hybrid approach yields more nuanced weight distributions than either Entropy or CILOS applied independently, particularly in datasets with conflicting criterion priorities.
+IDOCRIW demonstrates distinct advantages compared to standalone weighting techniques like Entropy or CILOS. First, it mitigates subjective bias through its dual-objective foundation, whereas traditional Entropy weights may overlook criterion interactions. Second, its compensatory nature allows for balanced trade-offs between attributes---a feature absent in non-compensatory methods. Unlike basic normalization techniques, IDOCRIW's square matrix transformation and impact loss calculation provide robust handling of extreme values while preserving subtle data variations. Under identical conditions, this hybrid approach yields more nuanced weight distributions than either Entropy or CILOS applied independently, particularly in datasets with conflicting criterion priorities.
 
 The steps in the IDOCRIW method are as follows:
-\begin{enumerate}[label=~\alph*)]
-\item An initial decision matrix is constructed, where each row represents an alternative and each column represents a criterion. 
-\item The initial decision matrix is normalized through the vector normalization technique. 
-\item Compute the degree of entropy and derive entropy weights. 
+\begin{enumerate}[label=\alph*)]
+\item An initial decision matrix is constructed, where each row represents an alternative and each column represents a criterion.
+\item The initial decision matrix is normalized through the vector normalization technique.
+\item Compute the degree of entropy and derive entropy weights.
 \item Construct a square matrix using the best-performing alternative for each criterion to establish benchmark values.
 \item Compute the performance degradation of non-optimal alternatives relative to the benchmark for each criterion, then organize impact losses into a matrix to model trade-offs between criteria when prioritizing one over others.
 \item Solve the weight system matrix to derive secondary weights that account for criterion interdependencies.
 \item Combine entropy and CILOS weights into final weights, balancing data dispersion and criterion interactions.
 \end{enumerate}
 
-
 \subsection{DOBI}
-\begin{remark}
-https://doi.org/10.1016/j.omega.2022.102690
-\end{remark}
-The DOmbi Bonferroni (DOBI) method is a novel multi-criteria decision-making (MCDM) technique that integrates Dombi norms and Bonferroni mean operators to address uncertainty, model interdependencies between criteria, and adapt to decision-makers' risk preferences. Unlike traditional linear methods, DOBI employs nonlinear aggregation to better reflect real-world trade-offs while preserving data proportionality during normalization, avoiding distortions common in approaches like TOPSIS or MABAC. Its adjustable parameters allow simulation of risk scenarios, ensuring robust rankings resistant to extreme values. In applications such as sustainability assessment, DOBI balances complex criteria interactions—demonstrated in banking sector evaluations where it identified top performers by dynamically weighting economic, social, and environmental factors. The method's flexibility and stability make it particularly suited for problems requiring nuanced trade-offs and adaptive decision-making frameworks.
+The DOmbi Bonferroni (DOBI) method is a novel multi-criteria decision-making (MCDM) technique that integrates Dombi norms with the Bonferroni mean operators to provide a flexible and robust framework for evaluating alternatives. At its core, DOBI leverages nonlinear aggregation functions to capture complex interdependencies among criteria while accounting for decision-makers' risk attitudes. By combining the strengths of Dombi norms for flexible, parameter-driven aggregation and Bonferroni means for mitigating extreme-value bias, DOBI offers a balanced approach to ranking alternatives in scenarios where traditional methods may falter, such as sustainability assessments, financial risk analysis, and resource allocation.
 
-\begin{remark}
-To be continued. 
-\end{remark}
+DOBI addresses key limitations of conventional MCDM methods like TOPSIS, VIKOR, and AHP with two distinct advantages. First, it features flexibility in risk modeling achieved through adjustable parameters ($\psi_{1}$, $\psi_{2}$, $\zeta$, $\delta$) that reflect decision-makers' risk preferences. Second, the model demonstrates robustness to outliers, as the Bonferroni mean operator reduces sensitivity to extreme values. Unlike TOPSIS which relies on linear distance measures or AHP which suffers from subjective weight bias, DOBI's hybrid structure ensures stability across dynamic decision contexts, making it particularly suited for real-world applications with incomplete or uncertain data.
+
+The main computational steps of DOBI follow a systematic process:
+\begin{enumerate}[label=\alph*)]
+\item \textbf{Weighted aggregation.} Compute DOBI weighted averaging function ($\mathbb{Z}_{1}^{\psi_{1},\psi_{2},\zeta}$) and DOBI weighted geometric weighted averaging function ($\mathbb{Z}_{2}^{\psi_{1},\psi_{2},\zeta}$) using Dombi-Bonferroni hybrid functions.
+\item \textbf{Integrated performance score.} Combine the above mentioned two sequences into a final performance score $\mathfrak{R}_{i}$ that balances nonlinear and geometric perspectives.
+\item \textbf{Ranking.} Prioritize alternatives based on $\mathfrak{R}_{i}$, where higher values indicate superior performance.
+\end{enumerate}
 
 \subsection{DPC Enhanced with KNN-Density and Adaptive Thresholding (KAT-DPC)}
-\begin{remark}
-\textit{Clustering by fast search and find of density peaks}\\
-https://www.science.org/doi/10.1126/science.1242072
-\end{remark}
-Density Peaks Clustering (DPC), introduced by Rodriguez and Laio in 2014, is a powerful clustering algorithm that identifies cluster centers as points with high local density ($\rho$) and large separation ($\delta$) from other high-density points. Unlike traditional centroid-based or hierarchical methods, DPC excels in detecting arbitrarily shaped clusters and automatically distinguishing noise points without requiring predefined cluster numbers. 
+Density Peaks Clustering (DPC), introduced by Rodriguez and Laio in 2014, is a powerful clustering algorithm that identifies cluster centers as points with high local density ($\rho$) and large separation ($\delta$) from other high-density points. Unlike traditional centroid-based or hierarchical methods, DPC excels in detecting arbitrarily shaped clusters and automatically distinguishing noise points without requiring predefined cluster numbers.
 
-However, the original DPC has limitations, including reliance on manual selection of cluster centers from a decision graph ($\rho$ vs. $\delta$) and sensitivity to the cutoff distance ($d_c$) in density estimation, similar to DBSCAN’s $\varepsilon$ challenge. These factors can introduce instability in clustering results, particularly in noisy or high-dimensional datasets where distance metrics lose meaning. Despite these challenges, DPC remains a powerful tool for unsupervised learning, particularly in applications like bioinformatics, image analysis, and anomaly detection, where cluster shapes and noise resilience are critical. Various studies have proposed improvements to the Density Peaks Clustering (DPC) algorithm to address its limitations, such as parameter sensitivity, scalability, and performance in high-dimensional or complex datasets. 
+However, the original DPC has limitations, including reliance on manual selection of cluster centers from a decision graph ($\rho$ vs.\ $\delta$) and sensitivity to the cutoff distance ($d_{c}$) in density estimation, similar to DBSCAN's $\varepsilon$ challenge. These factors can introduce instability in clustering results, particularly in noisy or high-dimensional datasets where distance metrics lose meaning. Despite these challenges, DPC remains a powerful tool for unsupervised learning, particularly in applications like bioinformatics, image analysis, and anomaly detection, where cluster shapes and noise resilience are critical. Various studies have proposed improvements to the Density Peaks Clustering (DPC) algorithm to address its limitations, such as parameter sensitivity, scalability, and performance in high-dimensional or complex datasets.
 
 The k-Nearest Neighbors (KNN) algorithm is a non-parametric classification method rooted in early pattern recognition research. Introduced conceptually by Fix and Hodges (1951) and formalized by Cover and Hart (1967), KNN operates on a simple principle: an unclassified data point is assigned the label most frequent among its $k$ closest neighbors in a labeled training set. The algorithm requires no assumptions about underlying data distributions, making it versatile but reliant on a meaningful distance metric. KNN's effectiveness hinges on local data density and the choice of $k$, balancing bias-variance trade-offs. Despite its simplicity, KNN remains widely used for its interpretability and adaptability to complex decision boundaries.
 
-\subsection{Innovative IDOCRIW-DOBI-DPC with KNN-Density and Adaptive Thresholding}
-\begin{enumerate}[label=\textbf{Step}~\arabic*]
-\item Construct the decision matrix.\\
-\[A=
+To overcome the challenges in original DPC and enhance the stability and reliability of clustering results, this study implements several key improvements.
+\begin{itemize}
+\item \textbf{KNN-based density estimation:} Replaces the original cutoff-distance-dependent density calculation with a k-nearest neighbors approach, making the algorithm more robust to varying densities and eliminating sensitivity to the $d_{c}$ parameter.
+\item \textbf{Automated center selection:} Implements a knee-point detection method on the $\gamma$ ($\rho \times \delta$) values to objectively identify cluster centers, removing the subjectivity of manual selection from decision graphs.
+\item \textbf{Noise-adaptive reassignment:} Incorporates a density-aware noise handling mechanism that only reassigns noise points meeting certain density thresholds, preventing arbitrary assignment of true outliers.
+\item \textbf{K-Means refinement:} Uses the top $\gamma$ points as fixed initial centers for K-Means clustering, combining DPC's strength in center identification with K-Means' effectiveness in partition refinement.
+\end{itemize}
+
+The enhanced DPC algorithm demonstrates improved robustness across diverse datasets, particularly in handling varying densities and high-dimensional spaces. By automating critical steps and reducing parameter sensitivity, the improved version delivers more consistent clustering results while maintaining DPC's core advantages in identifying arbitrary cluster shapes and distinguishing noise points. These enhancements not only strengthen the theoretical foundation of DPC but also expand its practical applicability to more complex real-world datasets.
+
+\subsection{Innovative IDOCRIW--DOBI--DPC with KNN-Density and Adaptive Thresholding}
+\begin{enumerate}[label=\textbf{Step}~\arabic*.]
+\item Construct the decision matrix.
+\[
+A=
 \begin{bmatrix}
 a_{11} & a_{12} & \cdots & a_{1n} \\
 a_{21} & a_{22} & \cdots & a_{2n} \\
 \vdots & \vdots & \ddots & \vdots \\
-a_{m1} & a_{m2} & \cdots & a_{mn} \\
-\end{bmatrix}_{m \times n}.\]
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{bmatrix}_{m \times n}.
+\]
 where $a_{ij}$ represents the $j$th criterion value of the $i$th alternative.
+
 \item Normalize the decision matrix by means of vector normalization.
-\begin{enumerate}
+\begin{enumerate}[label=(\alph*)]
 \item For cost criteria ($X8$ in this case study):
-\[b_{ij} = \frac{\frac{1}{a_{ij}}}{\sqrt{\sum_{i=1}^{m} (\frac{1}{a_{ij}})^{2}}}.\]
-\item For benefit criteria ($X1-X7$):
-\[b_{ij} = \frac{a_{ij}}{\sqrt{\sum_{i=1}^{m} a_{ij}^{2}}}.\]
+\[
+b_{ij} = \frac{\frac{1}{a_{ij}}}{\sqrt{\sum_{i=1}^{m} (\frac{1}{a_{ij}})^{2}}}.
+\]
+\item For benefit criteria ($X1$--$X7$):
+\[
+b_{ij} = \frac{a_{ij}}{\sqrt{\sum_{i=1}^{m} a_{ij}^{2}}}.
+\]
 \end{enumerate}
 Where $b_{ij}$ is the normalized performance value of the $j$th criterion value of the $i$th alternative. Therefore, we arrive at the normalized decision matrix:
-\[B = 
+\[
+B=
 \begin{bmatrix}
-    b_{11} & b_{12} & \cdots & b_{1n} \\
-    b_{21} & b_{22} & \cdots & b_{2n} \\
-    \vdots & \vdots & \ddots & \vdots \\
-    b_{m1} & b_{m2} & \cdots & b_{mn} \\
-    \end{bmatrix}_{m \times n}.\]
-\item Assign the weights to the criterion with IDOCRIW.\\
+b_{11} & b_{12} & \cdots & b_{1n} \\
+b_{21} & b_{22} & \cdots & b_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+b_{m1} & b_{m2} & \cdots & b_{mn}
+\end{bmatrix}_{m \times n}.
+\]
+
+\item Assign the weights to the criterion with IDOCRIW.
 The weights are calculated using the following equation:
-\[\omega _{j} = \frac{q_{j} \cdot w_{j}}{\sum_{j=1}^{n} q_{j} \cdot w_{j}}\]
-where $q$ represents the CILOS weights and $w$ represents the entropy weights. 
-\begin{remark}
-需要完整写出计算用到的所有公式吗?? 即,计算公式出现在这一部分,步骤描述出现在4.1, 但IDOCRIW的计算公式较多,如果在这里罗列是否过于冗长? 可否通过引用entropy和CILOS的文献省略公式?
-\end{remark}
+\[
+\omega_{j} = \frac{q_{j} \cdot w_{j}}{\sum_{j=1}^{n} q_{j} \cdot w_{j}},
+\]
+where $q$ represents the CILOS weights and $w$ represents the entropy weights.
+
 The CILOS weight $q$ is determined through the solution of the following equation:
 \[
-\begin{bmatrix}{}
--\sum_{i=1}^{n} p_{i1} & p_{12} & \dots & p_{1n} \\
-p_{21}  & -\sum_{i=1}^{n} p_{i2} & \dots & p_{2n} \\
-\vdots  & \vdots & \ddots & \vdots \\
-p_{n1}  & p_{n2} & \dots & -\sum_{i=1}^{n} p_{in}
+\begin{bmatrix}
+-\sum_{i=1}^{n} p_{i1} & p_{12} & \ldots & p_{1n} \\
+p_{21} & -\sum_{i=1}^{n} p_{i2} & \ldots & p_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+p_{n1} & p_{n2} & \ldots & -\sum_{i=1}^{n} p_{in}
 \end{bmatrix}
-q^{T} = 0,\]
-where $p_{ij}$ represents the impact loss of the $j$th attribute, if selected as the best value. 
+q^{T} = 0,
+\]
+where $p_{ij}$ represents the impact loss of the $j$th attribute, if selected as the best value.
+
 The entropy weight $w$ is computed through the following equation:
-\[w_{j} = \frac{1-E_{j}}{\sum_{j=1}^{n} (1-E_{j})},\]
-where $E_{j} = -\frac{1}{\ln n} \sum_{i=1}^{n} b_{ij} \cdot \ln b_{ij}$
+\[
+w_{j} = \frac{1-E_{j}}{\sum_{j=1}^{n} (1-E_{j})},
+\]
+where
+\[
+E_{j} = -\frac{1}{\ln n} \sum_{i=1}^{n} b_{ij} \cdot \ln b_{ij}.
+\]
+
 \item Aggregate the performance with DOBI method.
 \begin{enumerate}[label=(\arabic*)]
-    \item Dombi-Bonferroni functions:\\
-    Weighted Averaging Function (Z1)
-    \[Z1_i = \frac{\sum_{j=1}^n b_{ij}}{1 + \left[\frac{\sum_{j=1}^n \sum_{\substack{k=1 \\ k \neq j}}^n \frac{\omega_j \omega_k}{1-w_j} \left(\psi_1 \left(\frac{1-f_{ij}}{f_{ij}}\right)^\zeta + \psi_2 \left(\frac{1-f_{ik}}{f_{ik}}\right)^\zeta\right)}{\psi_1 + \psi_2}\right]^{1/\zeta}}\]
-    Weighted Geometric Function (Z2)
-    \[Z2_i = \frac{\sum_{j=1}^n b_{ij}}{1 + \left[\frac{\sum_{j=1}^n \sum_{\substack{k=1 \\ k \neq j}}^n \frac{\omega_j \omega_k}{1-w_j} \left(\psi_1 \left(\frac{f_{ij}}{1-f_{ij}}\right)^\zeta + \psi_2 \left(\frac{f_{ik}}{1-f_{ik}}\right)^\zeta\right)}{\psi_1 + \psi_2}\right]^{1/\zeta}}\]
-    where $f_{ij} = \frac{b_{ij}}{\sum_{j=1}^n b_{ij}}$.
-    
-    \item Integrated DOBI value:
-    \[\Re_i = \frac{Z1_i + Z2_i}{1 + \frac{1}{2}\left[\left(\frac{1-Z1_i}{Z1_i}\right)^\delta + \left(\frac{1-Z2_i}{Z2_i}\right)^\delta\right]}\]
-    
+\item Dombi-Bonferroni functions:
+
+Weighted Averaging Function ($Z1$)
+\[
+Z1_{i} = \frac{\sum_{j=1}^{n} b_{ij}}{1 + \left[\dfrac{\displaystyle\sum_{j=1}^{n}\sum_{\substack{k=1 \\ k \neq j}}^{n}\dfrac{\omega_{j}\omega_{k}}{1-w_{j}}\left(\psi_{1}\left(\dfrac{1-f_{ij}}{f_{ij}}\right)^{\zeta} + \psi_{2}\left(\dfrac{1-f_{ik}}{f_{ik}}\right)^{\zeta}\right)}{\psi_{1}+\psi_{2}}\right]^{1/\zeta}}
+\]
+
+Weighted Geometric Function ($Z2$)
+\[
+Z2_{i} = \frac{\sum_{j=1}^{n} b_{ij}}{1 + \left[\dfrac{\displaystyle\sum_{j=1}^{n}\sum_{\substack{k=1 \\ k \neq j}}^{n}\dfrac{\omega_{j}\omega_{k}}{1-w_{j}}\left(\psi_{1}\left(\dfrac{f_{ij}}{1-f_{ij}}\right)^{\zeta} + \psi_{2}\left(\dfrac{f_{ik}}{1-f_{ik}}\right)^{\zeta}\right)}{\psi_{1}+\psi_{2}}\right]^{1/\zeta}}
+\]
+where $f_{ij} = \dfrac{b_{ij}}{\sum_{j=1}^{n} b_{ij}}$.
+
+\item Integrated DOBI value:
+\[
+\mathfrak{R}_{i} = \frac{Z1_{i}+Z2_{i}}{1+\dfrac{1}{2}\left[\left(\dfrac{1-Z1_{i}}{Z1_{i}}\right)^{\delta}+\left(\dfrac{1-Z2_{i}}{Z2_{i}}\right)^{\delta}\right]}.
+\]
 \end{enumerate}
-The integrated DOBI values ($\Re_{i}$) are ranked in descending order to obtain the final ranking. 
+The integrated DOBI values ($\mathfrak{R}_{i}$) are ranked in descending order to obtain the final ranking.
+
 \item KNN-based density estimation.
-\[\rho_i = \frac{1}{\text{mean}(d_{i,\text{KNN}})}\]
+For each data point, the algorithm calculates its local density $\rho$ by taking the reciprocal of the average distance to its $k=5$ nearest neighbors. This gives higher density values to points in more crowded regions. The computation is implemented using the following equation.
+\[
+\rho_{i} = \frac{1}{\mathrm{mean}(d_{i,\mathrm{KNN}})}.
+\]
 
-\item Delta calculation. 
-\[\delta_i = 
-\begin{cases} 
-    \min_{j:\rho_j > \rho_i}(d_{ij}) & \text{if } \exists j \text{ s.t. } \rho_j > \rho_i \\
-    \max_j(d_{ij}) & \text{otherwise}
-\end{cases}\]
+\item Delta calculation.
+For each point, $\delta$ represents the minimum distance to any point with higher density. For the point with highest density (which has no higher-density neighbors), delta is set to the maximum distance to any other point.
+\[
+\delta_{i} =
+\begin{cases}
+\min_{j:\rho_{j}>\rho_{i}}(d_{ij}) & \text{if }\exists\, j\text{ s.t. }\rho_{j}>\rho_{i} \\
+\max_{j}(d_{ij}) & \text{otherwise}
+\end{cases}
+\]
 
-\item Automated center selection. 
-\[\gamma_i = \rho_i \times \delta_i\]
-Then sort $\gamma_{i}$ in descending order and use KneeLocator to find the elbow point. The points before the elbow point are selected as cluster centers.
+\item Automated center selection.
+Gamma is the product of density and delta, which helps identify cluster centers (points with both high density and relatively large distance from higher density points).
+\[
+\gamma_{i} = \rho_{i} \times \delta_{i}.
+\]
+Then sort $\gamma_{i}$ in descending order and use KneeLocator to locate the elbow point and automatically determine the optimal number of clusters while enforcing a target range (8--9 clusters in this case). The points before the elbow point are selected as cluster centers.
 
-\item Assign clusters using K-means initialization. In case some points are not assigned to any cluster, we reassign them to the nearest cluster center.
+\item Initial clustering and noise point assignment.
+Clusters are assigned using K-means initialization with points of highest gamma values selected as initial cluster centers. In case some points are not assigned to any cluster, we reassign them to the nearest cluster center.
 
-
-
+\item Result organization and output.
+In order to provide meaningful grouping results for the benchmarking process later, labels of the final clusters are reorganized by average DOBI performance scores of member states in each group. In other words, Group 1 is the cluster with the highest performance score and Group 8 the lowest.
 \end{enumerate}
 
-\section{Results and Discussion}
-\subsection{Computational Results}
+\section{Results and discussion}
+
+\subsection{Computational results}
+
 \subsubsection{Ranking}
-Based on the proposed model, the transport safety scores and corresponding rankings of U.S. states are analyzed across multiple years (2016, 2019, 2022). The results reveal distinct patterns in performance and stability. California (CA), Texas (TX), and Florida (FL) consistently rank among the top states, demonstrating robust transport safety performance. California maintains its leading position across all years, while Texas and Florida show minor fluctuations but remain in the top tier. The District of Columbia (DC), Alaska (AK), and Vermont (VT) persistently rank at the bottom, indicating significant challenges in transport safety. Their scores show minimal improvement over time, suggesting systemic issues that require targeted interventions. 
+\begin{table}[H]
+\centering
+\caption{Transport safety scores and rankings of U.S.\ states (2016, 2019, 2022).}
+\label{tab:ranking}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+\multirow{2}{*}{State} & \multirow{2}{*}{Abbr.} & \multicolumn{2}{c}{2016} & \multicolumn{2}{c}{2019} & \multicolumn{2}{c}{2022} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+ & & Score & Rank & Score & Rank & Score & Rank \\
+\midrule
+Alabama & AL & 0.002129 & 19 & 0.002207 & 19 & 0.002221 & 16 \\
+Alaska & AK & 0.000124 & 46 & 0.000124 & 46 & 0.000101 & 48 \\
+Arizona & AZ & 0.002051 & 20 & 0.002051 & 21 & 0.002179 & 17 \\
+Arkansas & AR & 0.001091 & 31 & 0.001101 & 30 & 0.001115 & 29 \\
+California & CA & 0.018974 & 1 & 0.018942 & 1 & 0.018595 & 1 \\
+Colorado & CO & 0.001999 & 22 & 0.002068 & 20 & 0.001950 & 19 \\
+Connecticut & CT & 0.000771 & 33 & 0.000690 & 35 & 0.000618 & 36 \\
+Delaware & DE & 0.000113 & 47 & 0.000120 & 47 & 0.000078 & 50 \\
+District of Columbia & DC & 0.000025 & 51 & 0.000026 & 51 & 0.000023 & 51 \\
+Florida & FL & 0.010485 & 3 & 0.010650 & 3 & 0.011206 & 3 \\
+Georgia & GA & 0.004727 & 8 & 0.004804 & 9 & 0.004631 & 9 \\
+Hawaii & HI & 0.000109 & 48 & 0.000112 & 48 & 0.000099 & 49 \\
+Idaho & ID & 0.000382 & 39 & 0.000419 & 38 & 0.000428 & 39 \\
+Illinois & IL & 0.007117 & 5 & 0.006284 & 6 & 0.005850 & 6 \\
+Indiana & IN & 0.002740 & 14 & 0.002490 & 16 & 0.002712 & 13 \\
+Iowa & IA & 0.001432 & 27 & 0.001476 & 26 & 0.001392 & 23 \\
+Kansas & KS & 0.001219 & 30 & 0.001094 & 31 & 0.001005 & 31 \\
+Kentucky & KY & 0.001599 & 25 & 0.001449 & 27 & 0.001368 & 25 \\
+Louisiana & LA & 0.001393 & 28 & 0.001280 & 28 & 0.001365 & 26 \\
+Maine & ME & 0.000243 & 43 & 0.000232 & 43 & 0.000211 & 44 \\
+Maryland & MD & 0.001601 & 24 & 0.001596 & 24 & 0.001565 & 22 \\
+Massachusetts & MA & 0.002020 & 21 & 0.001922 & 22 & 0.001698 & 20 \\
+Michigan & MI & 0.004177 & 10 & 0.004186 & 10 & 0.004214 & 10 \\
+Minnesota & MN & 0.003210 & 12 & 0.003028 & 12 & 0.003047 & 11 \\
+Mississippi & MS & 0.000823 & 32 & 0.000801 & 33 & 0.000775 & 32 \\
+Missouri & MO & 0.002419 & 17 & 0.002425 & 18 & 0.002338 & 15 \\
+Montana & MT & 0.000334 & 40 & 0.000324 & 40 & 0.000320 & 41 \\
+Nebraska & NE & 0.000707 & 35 & 0.000670 & 36 & 0.000622 & 35 \\
+Nevada & NV & 0.000688 & 36 & 0.000773 & 34 & 0.000724 & 34 \\
+New Hampshire & NH & 0.000207 & 44 & 0.000202 & 44 & 0.000186 & 45 \\
+New Jersey & NJ & 0.002593 & 16 & 0.002521 & 15 & 0.002593 & 14 \\
+New Mexico & NM & 0.000547 & 37 & 0.000459 & 37 & 0.000425 & 40 \\
+New York & NY & 0.008232 & 4 & 0.008907 & 4 & 0.007835 & 4 \\
+North Carolina & NC & 0.004465 & 9 & 0.004853 & 8 & 0.004903 & 8 \\
+North Dakota & ND & 0.000327 & 41 & 0.000286 & 41 & 0.000267 & 42 \\
+Ohio & OH & 0.005842 & 7 & 0.005535 & 7 & 0.005329 & 7 \\
+Oklahoma & OK & 0.001606 & 23 & 0.001508 & 25 & 0.001386 & 24 \\
+Oregon & OR & 0.001229 & 29 & 0.001180 & 29 & 0.001155 & 27 \\
+Pennsylvania & PA & 0.006530 & 6 & 0.006353 & 5 & 0.006375 & 5 \\
+Rhode Island & RI & 0.000102 & 50 & 0.000092 & 50 & 0.000104 & 47 \\
+South Carolina & SC & 0.001467 & 26 & 0.001602 & 23 & 0.000734 & 33 \\
+South Dakota & SD & 0.000297 & 42 & 0.000271 & 42 & 0.000462 & 38 \\
+Tennessee & TN & 0.002409 & 18 & 0.002484 & 17 & 0.001085 & 30 \\
+Texas & TX & 0.016945 & 2 & 0.017378 & 2 & 0.012552 & 2 \\
+Utah & UT & 0.000749 & 34 & 0.000828 & 32 & 0.001967 & 18 \\
+Vermont & VT & 0.000109 & 49 & 0.000102 & 49 & 0.000138 & 46 \\
+Virginia & VA & 0.003558 & 11 & 0.003455 & 11 & 0.001137 & 28 \\
+Washington & WA & 0.002972 & 13 & 0.002890 & 14 & 0.003032 & 12 \\
+West Virginia & WV & 0.000393 & 38 & 0.000349 & 39 & 0.000501 & 37 \\
+Wisconsin & WI & 0.002638 & 15 & 0.002927 & 13 & 0.001625 & 21 \\
+Wyoming & WY & 0.000149 & 45 & 0.000140 & 45 & 0.000228 & 43 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Based on the proposed model, the transport safety scores and corresponding rankings of U.S.\ states are analyzed across multiple years (2016, 2019, 2022). The results reveal distinct patterns in performance and stability. California (CA), Texas (TX), and Florida (FL) consistently rank among the top states, demonstrating robust transport safety performance. California maintains its leading position across all years, while Texas and Florida show minor fluctuations but remain in the top tier. The District of Columbia (DC), Alaska (AK), and Vermont (VT) persistently rank at the bottom, indicating significant challenges in transport safety. Their scores show minimal improvement over time, suggesting systemic issues that require targeted interventions.
 
 \subsubsection{Grouping}
-To facilitate a meaningful comparative analysis and identify trends in state-level performance, the U.S. states were categorized into distinct groups based on their transport safety scores. The results reveal a clear stratification, with certain states consistently maintaining the highest rankings (e.g., CA, FL, TX, IL, PA) and others persistently occupying the lowest tiers (e.g., AK, DE, DC, HI, VT). Notably, a subset of states, such as UT, VA, and WV, exhibited significant variability in their group assignments over time, suggesting dynamic or unstable performance. These findings enable targeted benchmarking, allowing policymakers to derive insights from top-performing states while investigating the factors contributing to volatility in others.
+\begin{table}[H]
+\centering
+\caption{Transport safety scores and group assignments of U.S.\ states (2016, 2019, 2022).}
+\label{tab:grouping}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+\multirow{2}{*}{State} & \multirow{2}{*}{Abbr.} & \multicolumn{2}{c}{2016} & \multicolumn{2}{c}{2019} & \multicolumn{2}{c}{2022} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+ & & Score & Group & Score & Group & Score & Group \\
+\midrule
+Alabama & AL & 0.002129 & 4 & 0.002207 & 3 & 0.002221 & 4 \\
+Alaska & AK & 0.000124 & 8 & 0.000124 & 8 & 0.000101 & 8 \\
+Arizona & AZ & 0.002051 & 4 & 0.002051 & 4 & 0.002179 & 3 \\
+Arkansas & AR & 0.001091 & 6 & 0.001101 & 5 & 0.001115 & 5 \\
+California & CA & 0.018974 & 1 & 0.018942 & 1 & 0.018595 & 1 \\
+Colorado & CO & 0.001999 & 4 & 0.002068 & 4 & 0.001950 & 4 \\
+Connecticut & CT & 0.000771 & 5 & 0.000690 & 6 & 0.000618 & 5 \\
+Delaware & DE & 0.000113 & 8 & 0.000120 & 8 & 0.000078 & 8 \\
+District of Columbia & DC & 0.000025 & 8 & 0.000026 & 8 & 0.000023 & 8 \\
+Florida & FL & 0.010485 & 1 & 0.010650 & 1 & 0.011206 & 1 \\
+Georgia & GA & 0.004727 & 3 & 0.004804 & 3 & 0.004631 & 2 \\
+Hawaii & HI & 0.000109 & 8 & 0.000112 & 8 & 0.000099 & 8 \\
+Idaho & ID & 0.000382 & 7 & 0.000419 & 7 & 0.000428 & 6 \\
+Illinois & IL & 0.007117 & 2 & 0.006284 & 2 & 0.005850 & 2 \\
+Indiana & IN & 0.002740 & 4 & 0.002490 & 3 & 0.002712 & 3 \\
+Iowa & IA & 0.001432 & 6 & 0.001476 & 5 & 0.001392 & 4 \\
+Kansas & KS & 0.001219 & 6 & 0.001094 & 5 & 0.001005 & 4 \\
+Kentucky & KY & 0.001599 & 6 & 0.001449 & 4 & 0.001368 & 5 \\
+Louisiana & LA & 0.001393 & 6 & 0.001280 & 4 & 0.001365 & 5 \\
+Maine & ME & 0.000243 & 8 & 0.000232 & 8 & 0.000211 & 8 \\
+Maryland & MD & 0.001601 & 5 & 0.001596 & 4 & 0.001565 & 3 \\
+Massachusetts & MA & 0.002020 & 5 & 0.001922 & 4 & 0.001698 & 3 \\
+Michigan & MI & 0.004177 & 3 & 0.004186 & 3 & 0.004214 & 2 \\
+Minnesota & MN & 0.003210 & 4 & 0.003028 & 3 & 0.003047 & 4 \\
+Mississippi & MS & 0.000823 & 7 & 0.000801 & 5 & 0.000775 & 5 \\
+Missouri & MO & 0.002419 & 4 & 0.002425 & 3 & 0.002338 & 4 \\
+Montana & MT & 0.000334 & 7 & 0.000324 & 7 & 0.000320 & 6 \\
+Nebraska & NE & 0.000707 & 7 & 0.000670 & 5 & 0.000622 & 6 \\
+Nevada & NV & 0.000688 & 7 & 0.000773 & 6 & 0.000724 & 5 \\
+New Hampshire & NH & 0.000207 & 8 & 0.000202 & 8 & 0.000186 & 8 \\
+New Jersey & NJ & 0.002593 & 5 & 0.002521 & 3 & 0.002593 & 3 \\
+New Mexico & NM & 0.000547 & 7 & 0.000459 & 7 & 0.000425 & 6 \\
+New York & NY & 0.008232 & 2 & 0.008907 & 2 & 0.007835 & 1 \\
+North Carolina & NC & 0.004465 & 3 & 0.004853 & 2 & 0.004903 & 2 \\
+North Dakota & ND & 0.000327 & 7 & 0.000286 & 7 & 0.000267 & 6 \\
+Ohio & OH & 0.005842 & 3 & 0.005535 & 2 & 0.005329 & 2 \\
+Oklahoma & OK & 0.001606 & 6 & 0.001508 & 5 & 0.001386 & 4 \\
+Oregon & OR & 0.001229 & 6 & 0.001180 & 5 & 0.001155 & 5 \\
+Pennsylvania & PA & 0.006530 & 2 & 0.006353 & 2 & 0.006375 & 2 \\
+Rhode Island & RI & 0.000102 & 8 & 0.000092 & 8 & 0.000104 & 8 \\
+South Carolina & SC & 0.001467 & 6 & 0.001602 & 4 & 0.000734 & 5 \\
+South Dakota & SD & 0.000297 & 7 & 0.000271 & 7 & 0.000462 & 7 \\
+Tennessee & TN & 0.002409 & 4 & 0.002484 & 3 & 0.001085 & 4 \\
+Texas & TX & 0.016945 & 1 & 0.017378 & 1 & 0.012552 & 1 \\
+Utah & UT & 0.000749 & 7 & 0.000828 & 6 & 0.001967 & 2 \\
+Vermont & VT & 0.000109 & 8 & 0.000102 & 8 & 0.000138 & 8 \\
+Virginia & VA & 0.003558 & 3 & 0.003455 & 3 & 0.001137 & 3 \\
+Washington & WA & 0.002972 & 4 & 0.002890 & 3 & 0.003032 & 3 \\
+West Virginia & WV & 0.000393 & 7 & 0.000349 & 6 & 0.000501 & 7 \\
+Wisconsin & WI & 0.002638 & 4 & 0.002927 & 3 & 0.001625 & 4 \\
+Wyoming & WY & 0.000149 & 8 & 0.000140 & 8 & 0.000228 & 7 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
+To facilitate a meaningful comparative analysis and identify trends in state-level performance, the U.S.\ states were categorized into distinct groups based on their transport safety scores. The results reveal a clear stratification, with certain states consistently maintaining the highest rankings (e.g., CA, FL, TX, IL, PA) and others persistently occupying the lowest tiers (e.g., AK, DE, DC, HI, VT). Notably, a subset of states, such as UT, VA, and WV, exhibited significant variability in their group assignments over time, suggesting dynamic or unstable performance. These findings enable targeted benchmarking, allowing policymakers to derive insights from top-performing states while investigating the factors contributing to volatility in others.
 
-\subsection{Robustness Test}
-\subsubsection{Comparison of Ranking}
-\subsubsubsection{Initial Sensitivity}
-\subsubsubsection{Intermediate Uncertainty}
-\subsubsubsection{Transverse Stability}
-\subsubsection{Comparison of Grouping}
-\subsubsubsection{Initial Sensitivity}
-\subsubsubsection{Intermediate Uncertainty}
-\subsubsubsection{Transverse Stability}
-\section{Practical Guidance}
-\subsection{Dynamic changes of indicators}
+\subsection{Robustness test}
+
+\subsubsection{Comparison of ranking}
+\subsubsubsection{Initial sensitivity}
+\begin{table}[H]
+\centering
+\caption{Rankings under alternative normalization methods (MM=MinMax, VE=Vector, ZS=Z-score).}
+\label{tab:init-sens}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l*{9}{c}}
+\toprule
+\multirow{2}{*}{State} & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & MM & VE & ZS & MM & VE & ZS & MM & VE & ZS \\
+\midrule
+AL & 23 & 19 & 18 & 20 & 19 & 18 & 15 & 16 & 16 \\
+AK & 47 & 46 & 46 & 45 & 46 & 42 & 43 & 48 & 44 \\
+AZ & 22 & 20 & 22 & 23 & 21 & 27 & 23 & 17 & 27 \\
+AR & 34 & 31 & 40 & 33 & 30 & 34 & 32 & 29 & 40 \\
+CA & 1 & 1 & 2 & 1 & 1 & 1 & 1 & 1 & 1 \\
+CO & 21 & 22 & 26 & 21 & 20 & 23 & 20 & 19 & 25 \\
+CT & 30 & 33 & 35 & 30 & 35 & 32 & 28 & 36 & 39 \\
+DE & 44 & 47 & 37 & 41 & 47 & 38 & 45 & 50 & 47 \\
+DC & 51 & 51 & 51 & 51 & 51 & 51 & 50 & 51 & 51 \\
+FL & 4 & 3 & 3 & 4 & 3 & 4 & 4 & 3 & 3 \\
+GA & 8 & 8 & 7 & 8 & 9 & 6 & 10 & 9 & 11 \\
+HI & 42 & 48 & 43 & 42 & 48 & 44 & 41 & 49 & 45 \\
+ID & 38 & 39 & 38 & 36 & 38 & 35 & 33 & 39 & 26 \\
+IL & 5 & 5 & 5 & 5 & 6 & 5 & 6 & 6 & 6 \\
+IN & 15 & 14 & 12 & 16 & 16 & 16 & 14 & 13 & 8 \\
+IA & 24 & 27 & 15 & 24 & 26 & 13 & 19 & 23 & 15 \\
+KS & 29 & 30 & 23 & 31 & 31 & 30 & 27 & 31 & 21 \\
+KY & 28 & 25 & 30 & 25 & 27 & 26 & 24 & 25 & 24 \\
+LA & 27 & 28 & 34 & 28 & 28 & 37 & 26 & 26 & 41 \\
+ME & 39 & 43 & 39 & 39 & 43 & 41 & 37 & 44 & 37 \\
+MD & 19 & 24 & 19 & 22 & 24 & 22 & 18 & 22 & 23 \\
+MA & 17 & 21 & 24 & 17 & 22 & 19 & 22 & 20 & 30 \\
+MI & 9 & 10 & 8 & 10 & 10 & 8 & 8 & 10 & 9 \\
+MN & 11 & 12 & 6 & 11 & 12 & 7 & 11 & 11 & 5 \\
+MS & 36 & 32 & 49 & 35 & 33 & 47 & 36 & 32 & 50 \\
+MO & 20 & 17 & 25 & 19 & 18 & 21 & 16 & 15 & 19 \\
+MT & 40 & 40 & 47 & 40 & 40 & 36 & 39 & 41 & 34 \\
+NE & 33 & 35 & 29 & 34 & 36 & 40 & 35 & 35 & 42 \\
+NV & 32 & 36 & 32 & 32 & 34 & 28 & 30 & 34 & 29 \\
+NH & 49 & 44 & 50 & 48 & 44 & 50 & 44 & 45 & 49 \\
+NJ & 14 & 16 & 20 & 15 & 15 & 24 & 12 & 14 & 13 \\
+NM & 35 & 37 & 36 & 38 & 37 & 43 & 40 & 40 & 48 \\
+NY & 3 & 4 & 4 & 3 & 4 & 3 & 3 & 4 & 4 \\
+NC & 10 & 9 & 10 & 9 & 8 & 11 & 7 & 8 & 10 \\
+ND & 41 & 41 & 33 & 43 & 41 & 33 & 42 & 42 & 36 \\
+OH & 7 & 7 & 9 & 7 & 7 & 9 & 9 & 7 & 14 \\
+OK & 25 & 23 & 31 & 26 & 25 & 29 & 29 & 24 & 35 \\
+OR & 26 & 29 & 21 & 27 & 29 & 20 & 25 & 27 & 22 \\
+PA & 6 & 6 & 11 & 6 & 5 & 10 & 5 & 5 & 7 \\
+RI & 45 & 50 & 45 & 49 & 50 & 48 & 49 & 47 & 43 \\
+SC & 48 & 26 & 28 & 47 & 23 & 31 & 48 & 33 & 32 \\
+SD & 43 & 42 & 48 & 44 & 42 & 49 & 38 & 38 & 28 \\
+TN & 18 & 18 & 14 & 18 & 17 & 15 & 31 & 30 & 20 \\
+TX & 2 & 2 & 1 & 2 & 2 & 2 & 2 & 2 & 2 \\
+UT & 31 & 34 & 27 & 29 & 32 & 25 & 17 & 18 & 12 \\
+VT & 46 & 49 & 44 & 46 & 49 & 39 & 46 & 46 & 31 \\
+VA & 13 & 11 & 17 & 12 & 11 & 17 & 47 & 28 & 38 \\
+WA & 12 & 13 & 13 & 13 & 14 & 14 & 13 & 12 & 17 \\
+WV & 37 & 38 & 41 & 37 & 39 & 45 & 34 & 37 & 33 \\
+WI & 16 & 15 & 16 & 14 & 13 & 12 & 21 & 21 & 18 \\
+WY & 50 & 45 & 42 & 50 & 45 & 46 & 51 & 43 & 46 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The initial sensitivity analysis compared rankings from the IDOCRIW-DOBI model using three normalization methods---MinMax, Z-Score, and Vector---across multiple years (2016, 2019, 2022). The results demonstrate strong consistency, with states like California, Texas, and Florida consistently ranking highest and smaller states like Alaska and Wyoming consistently ranking lowest across all methods and years. The rankings for mid-tier states such as Arizona and Colorado also show remarkable stability regardless of normalization technique. This alignment suggests the model produces reliable outcomes independent of the normalization approach. The high degree of consistency across methods indicates the IDOCRIW-DOBI model's robustness, as the choice of normalization technique does not significantly alter the relative rankings of states. This stability in results across different methodological approaches provides confidence in the model's ability to produce consistent rankings for multi-criteria decision-making applications involving U.S.\ states. The consistency across various rankings is further depicted in the line charts, where lines indicating different normalization methods are closely aligned.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2016_IDOCRIW_line.jpg}
+\caption{2016}
+\end{subfigure}
+\vspace{0.3em}
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2019_IDOCRIW_line.jpg}
+\caption{2019}
+\end{subfigure}
+\vspace{0.3em}
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2022_IDOCRIW_line.jpg}
+\caption{2022}
+\end{subfigure}
+\caption{Ranking comparison across normalization methods (IDOCRIW weighting).}
+\label{fig:norm-line}
+\end{figure}
+
+To examine the similarities among results from different methods, a correlation analysis was conducted. The correlation coefficients among rankings are significantly high, with some exceeding 0.90, which confirms the robustness of the proposed model.
+
+\begin{table}[H]
+\centering
+\caption{Correlation of rankings across normalization methods.}
+\label{tab:norm-corr}
+\small
+\begin{tabular}{l*{9}{c}}
+\toprule
+ & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & vector & MinMax & zscore & vector & MinMax & zscore & vector & MinMax & zscore \\
+\midrule
+vector & 1.000 & 0.963 & 0.931 & 1.000 & 0.962 & 0.933 & 1.000 & 0.950 & 0.887 \\
+MinMax & 0.963 & 1.000 & 0.935 & 0.962 & 1.000 & 0.943 & 0.950 & 1.000 & 0.904 \\
+zscore & 0.931 & 0.935 & 1.000 & 0.933 & 0.943 & 1.000 & 0.887 & 0.904 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsubsection{Intermediate uncertainty}
+\begin{table}[H]
+\centering
+\caption{Rankings under alternative weighting methods (ID=IDOCRIW, CL=CILOS, EP=Entropy).}
+\label{tab:inter-unc}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l*{9}{c}}
+\toprule
+\multirow{2}{*}{State} & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & ID & CL & EP & ID & CL & EP & ID & CL & EP \\
+\midrule
+AL & 19 & 19 & 19 & 19 & 19 & 19 & 16 & 16 & 16 \\
+AK & 46 & 46 & 46 & 46 & 47 & 46 & 48 & 49 & 47 \\
+AZ & 20 & 20 & 20 & 21 & 21 & 21 & 17 & 17 & 17 \\
+AR & 31 & 31 & 31 & 30 & 31 & 30 & 29 & 29 & 30 \\
+CA & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+CO & 22 & 22 & 22 & 20 & 20 & 20 & 19 & 18 & 19 \\
+CT & 33 & 33 & 33 & 35 & 35 & 35 & 36 & 36 & 35 \\
+DE & 47 & 47 & 47 & 47 & 46 & 47 & 50 & 50 & 50 \\
+DC & 51 & 51 & 51 & 51 & 51 & 51 & 51 & 51 & 51 \\
+FL & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 \\
+GA & 8 & 8 & 8 & 9 & 9 & 8 & 9 & 9 & 9 \\
+HI & 48 & 48 & 49 & 48 & 48 & 48 & 49 & 48 & 49 \\
+ID & 39 & 39 & 39 & 38 & 38 & 38 & 39 & 39 & 39 \\
+IL & 5 & 5 & 5 & 6 & 6 & 5 & 6 & 6 & 6 \\
+IN & 14 & 14 & 14 & 16 & 16 & 15 & 13 & 13 & 13 \\
+IA & 27 & 27 & 27 & 26 & 26 & 25 & 23 & 24 & 23 \\
+KS & 30 & 29 & 30 & 31 & 30 & 31 & 31 & 31 & 31 \\
+KY & 25 & 24 & 25 & 27 & 27 & 27 & 25 & 25 & 25 \\
+LA & 28 & 28 & 28 & 28 & 28 & 28 & 26 & 26 & 26 \\
+ME & 43 & 43 & 43 & 43 & 43 & 43 & 44 & 44 & 44 \\
+MD & 24 & 25 & 23 & 24 & 24 & 23 & 22 & 22 & 22 \\
+MA & 21 & 21 & 21 & 22 & 22 & 22 & 20 & 20 & 20 \\
+MI & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 10 & 10 \\
+MN & 12 & 12 & 12 & 12 & 12 & 12 & 11 & 12 & 11 \\
+MS & 32 & 32 & 32 & 33 & 33 & 33 & 32 & 32 & 32 \\
+MO & 17 & 17 & 18 & 18 & 18 & 18 & 15 & 15 & 15 \\
+MT & 40 & 40 & 41 & 40 & 40 & 40 & 41 & 41 & 41 \\
+NE & 35 & 35 & 35 & 36 & 36 & 36 & 35 & 35 & 36 \\
+NV & 36 & 36 & 36 & 34 & 34 & 34 & 34 & 34 & 34 \\
+NH & 44 & 44 & 44 & 44 & 44 & 44 & 45 & 45 & 45 \\
+NJ & 16 & 16 & 16 & 15 & 15 & 17 & 14 & 14 & 14 \\
+NM & 37 & 37 & 37 & 37 & 37 & 37 & 40 & 40 & 40 \\
+NY & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 \\
+NC & 9 & 9 & 9 & 8 & 8 & 9 & 8 & 8 & 8 \\
+ND & 41 & 41 & 40 & 41 & 41 & 41 & 42 & 42 & 42 \\
+OH & 7 & 7 & 7 & 7 & 7 & 7 & 7 & 7 & 7 \\
+OK & 23 & 23 & 24 & 25 & 25 & 26 & 24 & 23 & 24 \\
+OR & 29 & 30 & 29 & 29 & 29 & 29 & 27 & 27 & 28 \\
+PA & 6 & 6 & 6 & 5 & 5 & 6 & 5 & 5 & 5 \\
+RI & 50 & 50 & 50 & 50 & 50 & 50 & 47 & 47 & 48 \\
+SC & 26 & 26 & 26 & 23 & 23 & 24 & 33 & 33 & 33 \\
+SD & 42 & 42 & 42 & 42 & 42 & 42 & 38 & 38 & 38 \\
+TN & 18 & 18 & 17 & 17 & 17 & 16 & 30 & 30 & 29 \\
+TX & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 \\
+UT & 34 & 34 & 34 & 32 & 32 & 32 & 18 & 19 & 18 \\
+VT & 49 & 49 & 48 & 49 & 49 & 49 & 46 & 46 & 46 \\
+VA & 11 & 11 & 11 & 11 & 11 & 11 & 28 & 28 & 27 \\
+WA & 13 & 13 & 13 & 14 & 14 & 14 & 12 & 11 & 12 \\
+WV & 38 & 38 & 38 & 39 & 39 & 39 & 37 & 37 & 37 \\
+WI & 15 & 15 & 15 & 13 & 13 & 13 & 21 & 21 & 21 \\
+WY & 45 & 45 & 45 & 45 & 45 & 45 & 43 & 43 & 43 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+To evaluate the intermediate stability of the model, we compared rankings derived using three alternative weighting approaches---IDOCRIW (ID), CILOS (CL), and Entropy (EP)---across multiple years. The results demonstrate strong consistency, with states like California (CA), Texas (TX), and Florida (FL) consistently ranking highest, while smaller states (e.g., Alaska (AK), Wyoming (WY)) persistently occupy the lowest positions across all methods. Mid-tier states such as Michigan (MI) and Ohio (OH) also show stable rankings, with minimal fluctuations regardless of the weighting technique. For instance, California maintains its top rank in all years and methods, while Wyoming's scores remain negligible. The line charts would reveal overlapping ranking lines, particularly for dominant states, reinforcing the model's methodological consistency. Correlation coefficients between the rankings under different weighting methods exceed 0.95, as seen in the matrix. This high agreement confirms the model's robustness to variations in weighting approaches, ensuring reliable outcomes for decision-making applications.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2016_vector_line.jpg}
+\caption{2016}
+\end{subfigure}
+\vspace{0.3em}
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2019_vector_line.jpg}
+\caption{2019}
+\end{subfigure}
+\vspace{0.3em}
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2022_vector_line.jpg}
+\caption{2022}
+\end{subfigure}
+\caption{Ranking comparison across weighting methods (vector normalization).}
+\label{fig:weight-line}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Correlation of rankings across weighting methods.}
+\label{tab:weight-corr}
+\small
+\begin{tabular}{l*{9}{c}}
+\toprule
+ & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & IDOCRIW & entropy & cilos & IDOCRIW & entropy & cilos & IDOCRIW & entropy & cilos \\
+\midrule
+IDOCRIW & 1.000 & 1.000 & 1.000 & 1.000 & 0.999 & 1.000 & 1.000 & 1.000 & 1.000 \\
+entropy & 1.000 & 1.000 & 0.999 & 0.999 & 1.000 & 0.999 & 1.000 & 1.000 & 0.999 \\
+cilos & 1.000 & 0.999 & 1.000 & 1.000 & 0.999 & 1.000 & 1.000 & 0.999 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsubsection{Transverse stability}
+\begin{table}[H]
+\centering
+\caption{Rankings under alternative aggregation methods (DB=DOBI, TP=TOPSIS, VK=VIKOR).}
+\label{tab:trans-stab}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l*{9}{c}}
+\toprule
+\multirow{2}{*}{State} & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & DB & TP & VK & DB & TP & VK & DB & TP & VK \\
+\midrule
+AL & 19 & 19 & 23 & 19 & 19 & 16 & 16 & 19 & 15 \\
+AK & 46 & 44 & 48 & 46 & 45 & 46 & 48 & 47 & 47 \\
+AZ & 20 & 21 & 18 & 21 & 20 & 26 & 17 & 17 & 30 \\
+AR & 31 & 29 & 33 & 30 & 29 & 33 & 29 & 30 & 32 \\
+CA & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+CO & 22 & 23 & 19 & 20 & 21 & 19 & 19 & 21 & 16 \\
+CT & 33 & 36 & 30 & 35 & 40 & 32 & 36 & 41 & 29 \\
+DE & 47 & 50 & 42 & 47 & 49 & 39 & 50 & 50 & 48 \\
+DC & 51 & 51 & 50 & 51 & 51 & 50 & 51 & 51 & 50 \\
+FL & 3 & 3 & 9 & 3 & 3 & 10 & 3 & 2 & 10 \\
+GA & 8 & 8 & 7 & 9 & 9 & 6 & 9 & 10 & 9 \\
+HI & 48 & 49 & 44 & 48 & 50 & 44 & 49 & 49 & 42 \\
+ID & 39 & 41 & 38 & 38 & 41 & 35 & 39 & 43 & 33 \\
+IL & 5 & 6 & 3 & 6 & 6 & 4 & 6 & 7 & 4 \\
+IN & 14 & 17 & 14 & 16 & 18 & 15 & 13 & 15 & 13 \\
+IA & 27 & 25 & 25 & 26 & 25 & 23 & 23 & 27 & 20 \\
+KS & 30 & 20 & 28 & 31 & 22 & 31 & 31 & 26 & 26 \\
+KY & 25 & 26 & 31 & 27 & 28 & 25 & 25 & 29 & 22 \\
+LA & 28 & 30 & 26 & 28 & 30 & 30 & 26 & 28 & 25 \\
+ME & 43 & 43 & 41 & 43 & 44 & 38 & 44 & 45 & 35 \\
+MD & 24 & 27 & 22 & 24 & 27 & 22 & 22 & 24 & 19 \\
+MA & 21 & 22 & 20 & 22 & 24 & 20 & 20 & 22 & 24 \\
+MI & 10 & 10 & 10 & 10 & 10 & 8 & 10 & 11 & 7 \\
+MN & 12 & 12 & 13 & 12 & 12 & 13 & 11 & 14 & 12 \\
+MS & 32 & 33 & 37 & 33 & 33 & 36 & 32 & 34 & 46 \\
+MO & 17 & 15 & 21 & 18 & 15 & 21 & 15 & 16 & 17 \\
+MT & 40 & 38 & 46 & 40 & 39 & 40 & 41 & 42 & 36 \\
+NE & 35 & 32 & 34 & 36 & 32 & 34 & 35 & 36 & 37 \\
+NV & 36 & 40 & 32 & 34 & 38 & 29 & 34 & 39 & 27 \\
+NH & 44 & 46 & 51 & 44 & 46 & 51 & 45 & 46 & 51 \\
+NJ & 16 & 13 & 16 & 15 & 14 & 18 & 14 & 13 & 14 \\
+NM & 37 & 37 & 35 & 37 & 36 & 42 & 40 & 40 & 45 \\
+NY & 4 & 4 & 2 & 4 & 4 & 2 & 4 & 4 & 2 \\
+NC & 9 & 9 & 8 & 8 & 8 & 9 & 8 & 9 & 8 \\
+ND & 41 & 34 & 39 & 41 & 34 & 41 & 42 & 38 & 44 \\
+OH & 7 & 7 & 5 & 7 & 7 & 5 & 7 & 8 & 6 \\
+OK & 23 & 24 & 27 & 25 & 23 & 27 & 24 & 25 & 28 \\
+OR & 29 & 31 & 24 & 29 & 31 & 24 & 27 & 32 & 21 \\
+PA & 6 & 5 & 6 & 5 & 5 & 7 & 5 & 5 & 3 \\
+RI & 50 & 47 & 43 & 50 & 48 & 47 & 47 & 48 & 40 \\
+SC & 26 & 28 & 36 & 23 & 26 & 37 & 33 & 31 & 41 \\
+SD & 42 & 35 & 49 & 42 & 35 & 49 & 38 & 33 & 38 \\
+TN & 18 & 18 & 17 & 17 & 17 & 17 & 30 & 23 & 31 \\
+TX & 2 & 2 & 4 & 2 & 2 & 3 & 2 & 3 & 5 \\
+UT & 34 & 39 & 29 & 32 & 37 & 28 & 18 & 6 & 18 \\
+VT & 49 & 48 & 45 & 49 & 47 & 45 & 46 & 44 & 39 \\
+VA & 11 & 11 & 11 & 11 & 11 & 11 & 28 & 18 & 43 \\
+WA & 13 & 14 & 12 & 14 & 16 & 12 & 12 & 12 & 11 \\
+WV & 38 & 42 & 40 & 39 & 42 & 43 & 37 & 37 & 34 \\
+WI & 15 & 16 & 15 & 13 & 13 & 14 & 21 & 20 & 23 \\
+WY & 45 & 45 & 47 & 45 & 43 & 48 & 43 & 35 & 49 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The model's robustness was evaluated by comparing its rankings with those derived from established aggregation methods---TOPSIS (TP) and VIKOR (VK)---across multiple years (2016, 2019, 2022). The results demonstrate strong alignment, with dominant states like California (CA), Texas (TX), and Florida (FL) consistently ranking highest under all methods, while smaller states (e.g., Alaska (AK), Wyoming (WY)) persistently occupy the lowest positions. For instance, California maintains its top rank in TOPSIS and VIKOR, while Wyoming's VIKOR scores remain low, reflecting its last-place consistency. Mid-tier states such as New York (NY) and Pennsylvania (PA) show minor rank deviations across methods, with NY ranking 4th in TOPSIS (2016) and 2nd in VIKOR (2016), highlighting method-specific nuances. The line charts would reveal overlapping ranking lines for top and bottom states, while mid-tier states exhibit slight divergences. Correlation coefficients between the model's rankings confirm high methodological agreement.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2016_line.jpg}
+\caption{2016}
+\end{subfigure}
+\vspace{0.3em}
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2019_line.jpg}
+\caption{2019}
+\end{subfigure}
+\vspace{0.3em}
+\begin{subfigure}{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{2022_line.jpg}
+\caption{2022}
+\end{subfigure}
+\caption{Ranking comparison across aggregation methods.}
+\label{fig:agg-line}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Correlation of rankings across aggregation methods.}
+\label{tab:agg-corr}
+\small
+\begin{tabular}{l*{9}{c}}
+\toprule
+ & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & DOBI & TOPSIS & VIKOR & DOBI & TOPSIS & VIKOR & DOBI & TOPSIS & VIKOR \\
+\midrule
+DOBI & 1.000 & 0.979 & 0.974 & 1.000 & 0.980 & 0.971 & 1.000 & 0.957 & 0.951 \\
+TOPSIS & 0.979 & 1.000 & 0.949 & 0.980 & 1.000 & 0.940 & 0.957 & 1.000 & 0.879 \\
+VIKOR & 0.974 & 0.949 & 1.000 & 0.971 & 0.940 & 1.000 & 0.951 & 0.879 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Comparison of grouping}
+\begin{table}[H]
+\centering
+\caption{Group assignments under DPC, KAT-DPC, and $k$-means.}
+\label{tab:group-cmp}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l*{9}{c}}
+\toprule
+\multirow{2}{*}{State} & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & DPC & KAT-DPC & kmeans & DPC & KAT-DPC & kmeans & DPC & KAT-DPC & kmeans \\
+\midrule
+AL & 4 & 4 & 6 & 4 & 3 & 6 & 3 & 4 & 4 \\
+AK & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+AZ & 5 & 4 & 6 & 3 & 4 & 6 & 3 & 3 & 4 \\
+AR & 7 & 6 & 7 & 5 & 5 & 7 & 6 & 5 & 7 \\
+CA & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+CO & 4 & 4 & 6 & 4 & 4 & 6 & 3 & 4 & 6 \\
+CT & 5 & 5 & 8 & 6 & 6 & 8 & 7 & 5 & 8 \\
+DE & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+DC & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+FL & 1 & 1 & 3 & 1 & 1 & 3 & 1 & 1 & 3 \\
+GA & 3 & 3 & 5 & 2 & 3 & 5 & 2 & 2 & 4 \\
+HI & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+ID & 6 & 7 & 8 & 6 & 7 & 8 & 6 & 6 & 8 \\
+IL & 2 & 2 & 4 & 2 & 2 & 5 & 2 & 2 & 4 \\
+IN & 4 & 4 & 6 & 4 & 3 & 6 & 3 & 3 & 4 \\
+IA & 4 & 6 & 7 & 5 & 5 & 7 & 6 & 4 & 7 \\
+KS & 4 & 6 & 7 & 5 & 5 & 7 & 6 & 4 & 7 \\
+KY & 5 & 6 & 6 & 4 & 4 & 7 & 6 & 5 & 7 \\
+LA & 5 & 6 & 6 & 4 & 4 & 7 & 3 & 5 & 7 \\
+ME & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+MD & 5 & 5 & 6 & 3 & 4 & 6 & 3 & 3 & 6 \\
+MA & 5 & 5 & 6 & 3 & 4 & 6 & 3 & 3 & 6 \\
+MI & 3 & 3 & 5 & 2 & 3 & 5 & 3 & 2 & 4 \\
+MN & 4 & 4 & 6 & 4 & 3 & 6 & 3 & 4 & 4 \\
+MS & 6 & 7 & 7 & 7 & 5 & 7 & 6 & 5 & 7 \\
+MO & 4 & 4 & 6 & 4 & 3 & 6 & 3 & 4 & 4 \\
+MT & 7 & 7 & 7 & 7 & 7 & 7 & 6 & 6 & 7 \\
+NE & 7 & 7 & 7 & 7 & 5 & 7 & 6 & 6 & 7 \\
+NV & 6 & 7 & 8 & 6 & 6 & 7 & 7 & 5 & 7 \\
+NH & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+NJ & 3 & 5 & 5 & 3 & 3 & 6 & 3 & 3 & 4 \\
+NM & 6 & 7 & 7 & 7 & 7 & 7 & 6 & 6 & 7 \\
+NY & 2 & 2 & 4 & 1 & 2 & 4 & 2 & 1 & 3 \\
+NC & 3 & 3 & 5 & 2 & 2 & 5 & 2 & 2 & 4 \\
+ND & 7 & 7 & 7 & 7 & 7 & 7 & 6 & 6 & 7 \\
+OH & 3 & 3 & 5 & 2 & 2 & 5 & 2 & 2 & 4 \\
+OK & 4 & 6 & 7 & 5 & 5 & 7 & 6 & 4 & 7 \\
+OR & 5 & 6 & 7 & 5 & 5 & 7 & 6 & 5 & 7 \\
+PA & 2 & 2 & 4 & 2 & 2 & 4 & 2 & 2 & 3 \\
+RI & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+SC & 5 & 6 & 6 & 4 & 4 & 6 & 5 & 5 & 6 \\
+SD & 7 & 7 & 7 & 7 & 7 & 7 & 7 & 7 & 7 \\
+TN & 4 & 4 & 6 & 4 & 3 & 6 & 5 & 4 & 6 \\
+TX & 1 & 1 & 2 & 1 & 1 & 2 & 1 & 1 & 2 \\
+UT & 6 & 7 & 8 & 6 & 6 & 7 & 4 & 2 & 5 \\
+VT & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 & 8 \\
+VA & 3 & 3 & 5 & 3 & 3 & 6 & 5 & 3 & 6 \\
+WA & 3 & 4 & 6 & 3 & 3 & 6 & 3 & 3 & 4 \\
+WV & 6 & 7 & 8 & 6 & 6 & 8 & 7 & 7 & 8 \\
+WI & 4 & 4 & 6 & 4 & 3 & 6 & 5 & 4 & 6 \\
+WY & 8 & 8 & 8 & 8 & 8 & 8 & 7 & 7 & 8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{V-measure between grouping methods.}
+\label{tab:vmeasure}
+\small
+\begin{tabular}{l*{9}{c}}
+\toprule
+ & \multicolumn{3}{c}{2016} & \multicolumn{3}{c}{2019} & \multicolumn{3}{c}{2022} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+ & DPC & KAT-DPC & kmeans & DPC & KAT-DPC & kmeans & DPC & KAT-DPC & kmeans \\
+\midrule
+DPC & 1 & 0.779 & 0.682 & 1 & 0.766 & 0.715 & 1 & 0.667 & 0.688 \\
+KAT-DPC & 0.779 & 1 & 0.712 & 0.766 & 1 & 0.671 & 0.667 & 1 & 0.550 \\
+kmeans & 0.682 & 0.712 & 1 & 0.715 & 0.671 & 1 & 0.688 & 0.550 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Practical guidance}
+
+\subsection{Dynamic changes of SPIs}
+\missingsection
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X1.jpg}
+\caption{$X1$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X2.jpg}
+\caption{$X2$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X3.jpg}
+\caption{$X3$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X4.jpg}
+\caption{$X4$}
+\end{subfigure}
+
+\vspace{0.5em}
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X5.jpg}
+\caption{$X5$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X6.jpg}
+\caption{$X6$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X7.jpg}
+\caption{$X7$}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{X8.jpg}
+\caption{$X8$}
+\end{subfigure}
+\caption{Dynamic changes of Safety Performance Indicators ($X1$--$X8$).}
+\label{fig:spi-dyn}
+\end{figure}
+
 \subsection{De-construction of composite index}
+\missingsection
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.32\textwidth}
+\centering
+\includegraphics[width=\linewidth]{2016_DOBI.jpg}
+\caption{2016}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.32\textwidth}
+\centering
+\includegraphics[width=\linewidth]{2019_DOBI.jpg}
+\caption{2019}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.32\textwidth}
+\centering
+\includegraphics[width=\linewidth]{2022_DOBI.jpg}
+\caption{2022}
+\end{subfigure}
+\caption{De-construction of the DOBI composite index.}
+\label{fig:deconstruct}
+\end{figure}
+
 \subsection{De-composition of score changes}
+\missingsection
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{DOBI_change_2016to2022.jpg}
+\caption{De-composition of DOBI score changes from 2016 to 2022.}
+\label{fig:decompose}
+\end{figure}
+
 \subsection{Benchmarking}
-\section{Conclusions and Further Studies}
+\missingsection
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 1.jpg"}}
+\caption{Group 1}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 2.jpg"}}
+\caption{Group 2}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 3.jpg"}}
+\caption{Group 3}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 4.jpg"}}
+\caption{Group 4}
+\end{subfigure}
+
+\vspace{0.5em}
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 5.jpg"}}
+\caption{Group 5}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 6.jpg"}}
+\caption{Group 6}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_remodified_2022_group 7.jpg"}}
+\caption{Group 7}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.24\textwidth}
+\centering
+\includegraphics[width=\linewidth]{{"DPC_2022_group 8.jpg"}}
+\caption{Group 8}
+\end{subfigure}
+\caption{Benchmarking radar charts by KAT-DPC group (2022).}
+\label{fig:benchmark}
+\end{figure}
+
+\section{Conclusion and further studies}
+
+\subsection{Conclusion}
+This study developed an innovative IDOCRIW-DOBI-DPC model enhanced with KNN-density and adaptive thresholding to address the limitations of traditional Multiple Criteria Decision Making (MCDM) methods in transport safety planning. By integrating IDOCRIW for hybrid weighting, DOBI for robust aggregation, and an improved DPC algorithm for automated clustering, the model achieved higher stability and reliability in evaluating U.S.\ states' transport safety performance. The analysis revealed consistent top performers (e.g., California, Texas, Florida), while also identifying dynamic trends in mid-tier states. The robustness tests confirmed the model's resilience to normalization methods, weighting techniques, and aggregation approaches, with correlation coefficients exceeding 0.95 in most comparisons. Furthermore, the practical guidance provided actionable insights for policymakers through SPI dynamics, composite index deconstruction, and benchmarking.
+
+\subsection{Contributions}
+This study developed an innovative model, which integrated IDOCRIW, DOBI, and enhanced DPC (KAT-DPC), addressing critical gaps in MCDM, such as input sensitivity and manual parameter selection. The KNN-density and adaptive thresholding improvements automate cluster center identification and enhance noise resilience, making the model more practical for real-world applications. The results offer data-driven guidance for transport safety planning, helping states benchmark performance, identify improvement areas, and adopt best practices from top-performing peers.
+
+\subsection{Limitations}
+Despite its contributions, this study has limitations:
+\begin{enumerate}
+\item \textbf{Data Constraints:} The reliance on publicly available datasets may overlook nuanced regional factors (e.g., local regulations, cultural behaviors) that influence transport safety.
+\item \textbf{Objective Weighting Bias:} The model prioritizes objective weighting methods (e.g., Entropy, CILOS), which may not fully capture stakeholder preferences or subjective criteria.
+\item \textbf{Dynamic Environments:} The static nature of the analysis may not account for rapid changes in transport systems, such as emerging technologies or sudden policy shifts.
+\end{enumerate}
+
+\subsection{Future Directions}
+Future research could explore the following avenues:
+\begin{enumerate}
+\item \textbf{Indicator System Refinement:} As transport systems evolve with advancements like autonomous vehicles and smart infrastructure, the SPI framework should incorporate new metrics to reflect modern challenges.
+\item \textbf{Integration of AI Techniques:} Combining the model with machine learning algorithms (e.g., deep learning for pattern recognition, reinforcement learning for dynamic decision-making) could improve efficiency and adaptability.
+\item \textbf{Global Application:} Extending the model to other countries or regions would test its generalizability and uncover cross-cultural insights for transport safety.
+\item \textbf{Stakeholder-Informed Weighting:} Developing hybrid weighting methods that balance objective data with stakeholder input could further refine decision-making processes.
+\end{enumerate}
+By addressing these directions, future studies can build on this work to create even more robust and versatile tools for transport safety planning.
+
 \section*{References}
+\missingsection
 
-
-\maketitle
 \end{document}
-
