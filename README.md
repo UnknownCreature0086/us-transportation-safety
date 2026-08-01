@@ -55,10 +55,6 @@ Primary source: NHTSA *Traffic Safety Facts* (motor vehicle crash data). Additio
 - Year-specific extracts (`2010_raw.xlsx`, …, `2022_raw.xlsx`)
 - NHTSA annual reports (PDF)
 
-Suggested citation for the 2022 report:
-
-> National Center for Statistics and Analysis. (2024, December). *Traffic safety facts 2022: A compilation of motor vehicle traffic crash data* (Report No. DOT HS 813 656). National Highway Traffic Safety Administration.
-
 ### Methodology
 
 #### IDOCRIW (Integrated Determination of Objective CRIteria Weights)
