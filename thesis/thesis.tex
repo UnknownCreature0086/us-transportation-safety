@@ -7,7 +7,6 @@
 \usepackage{longtable}
 \usepackage{multirow}
 \usepackage{enumitem}
-\usepackage{hyperref}
 \usepackage{float}
 \usepackage{titlesec}
 \usepackage{algorithm}
@@ -17,15 +16,16 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{placeins}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref} % load near last for stable cross-refs
+\usepackage{bookmark}
 \graphicspath{{../outputs/figures/index/}{../outputs/robustness/normalization/}{../outputs/robustness/weighting/}{../outputs/robustness/aggregating/}{../outputs/figures/decompose_indicator/}{../outputs/figures/deconstruct_performance/}{../outputs/figures/deconstruct_change/}{../outputs/figures/decompose_DPC_group/}}
 \everymath{\displaystyle}
 \linespread{1.2}
 \setlength{\parindent}{0em}
 \setlength{\parskip}{5pt}
 \author{Xiuyuan Lu}
-
-\newcommand{\placeholder}[1]{\par\noindent\textcolor{gray}{\textit{[#1]}}\par}
-\newcommand{\missingsection}{\placeholder{Section content to be completed.}}
+\date{} % suppress date on title page
 
 \titleclass{\subsubsubsection}{straight}[\subsection]
 \newcounter{subsubsubsection}[subsubsection]
@@ -34,7 +34,7 @@
 \titlespacing*{\subsubsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
 \makeatletter
 \setcounter{secnumdepth}{4}
-\setcounter{tocdepth}{4}
+\setcounter{tocdepth}{3}
 \newcommand{\l@subsubsubsection}{\@dottedtocline{4}{7em}{4em}}
 \makeatother
 
@@ -44,9 +44,10 @@
 \maketitle
 
 \begin{abstract}
-\missingsection
+Selecting a robust Multiple Criteria Decision Making (MCDM) pipeline for road safety planning remains difficult because rankings and groupings are sensitive to normalization, weighting, and aggregation choices, while classical Density Peaks Clustering (DPC) still depends on manual center selection. This study proposes an integrated IDOCRIW--DOBI--DPC framework enhanced with KNN-based density estimation and adaptive thresholding (KAT-DPC), and applies it to transport safety assessment for the 50 U.S.\ states and the District of Columbia. Eight Safety Performance Indicators (SPIs)---highway safety expenditures, registered vehicles, licensed drivers, vehicle miles traveled, road length, road condition, seat belt usage, and fatality rate---are compiled mainly from NHTSA and BTS sources for 2016, 2019, and 2022. IDOCRIW provides hybrid objective weights, DOBI aggregates interdependent criteria into composite scores, and KAT-DPC automates clustering for benchmarking. Results show persistent top performers (notably California, Texas, and Florida) and persistent low performers (e.g., Alaska, Vermont, and the District of Columbia), with selected mid-tier states exhibiting substantial group volatility. Robustness checks across alternative normalization, weighting, and aggregation methods yield high rank correlations (often above 0.90--0.95). Indicator dynamics, composite deconstruction, score-change decomposition, and within-group benchmarking further translate the scores into actionable guidance for state-level safety planning.
 \end{abstract}
 
+\newpage
 \tableofcontents
 \newpage
 
@@ -66,7 +67,11 @@ The remainder of this paper is organized as follows: Section 2 review the instit
 \section{Literature review}
 
 \subsection{US states institutional capacity in transport safety management}
-\missingsection
+Institutional capacity in U.S.\ transport safety management can be read along a geographic ladder---from nation-wide programs, through state-level analytic systems, down to city-scale implementation. At the \textbf{large-scale (national) level}, the United States has progressively institutionalized a zero-deaths agenda under overlapping banners of Vision Zero, Toward Zero Deaths, Road to Zero, and, most recently, the U.S.\ Department of Transportation's National Roadway Safety Strategy (NRSS). These initiatives share a Safe System framing: shared responsibility across road users, vehicles, speeds, infrastructure, and post-crash care; proactive rather than purely reactive intervention; and redundancy so that a single failure does not produce a fatality. Operational instruments include Strategic Highway Safety Plans (SHSPs) at the state level, the Highway Safety Improvement Program (HSIP), and the Safe Streets and Roads for All (SS4A) grant program, which funds local and regional Action Plans and implementation projects. In this layer, ``methods'' are primarily programmatic and evaluative---performance management, systemic safety screening, and multi-agency coordination---rather than a single econometric specification. Data streams are correspondingly aggregated (NHTSA Fatality Analysis Reporting System, state HSIP reports, grant reporting), and peer-reviewed causal identification is often thinner than the institutional documentation itself.
+
+At the \textbf{small-area (city) level}, New York City remains the most documented U.S.\ Vision Zero case. Launched in 2014, NYC Vision Zero is organized around a cross-agency Task Force (NYPD, DOT, TLC, DOHMH, and others) that meets on a bi-weekly cadence, maintains shared metrics, and couples street redesign, automated speed enforcement, legislative change (e.g., default speed limits), and public education. The management framework is therefore an inter-agency operating system: agenda setting by the Mayor's Office of Operations, working groups for data/marketing/fleet, and continuous monitoring of fatalities and serious injuries. Available evidence is rich on process and outcome tracking, yet---as with many Vision Zero city programs---published materials emphasize administrative dashboards and engineering inventories more than transparent research designs (control groups, counterfactuals, or formal multi-criteria evaluation). In other words, institutional capacity is high on coordination and delivery, while academic-grade method and microdata documentation remain comparatively incomplete for external replication.
+
+At the \textbf{state (subnational) level}, research capacity is illustrated by Texas work on pedestrian crash trends. Bernhardt and Kockelman (2021), \textit{An analysis of pedestrian crash trends and contributing factors in Texas}, use TxDOT Crash Records Information System (CRIS) records for 2010--2018 together with county-level demographic, land-use, and climate covariates. Methodologically, they estimate ordinary least squares (OLS) models of pedestrian crashes and deaths normalized by vehicle-miles and walk-miles traveled, and they relate risk to factors such as homelessness, income, and poverty---completing the literature-to-data-to-model loop that is often missing in Vision Zero program write-ups. Related Texas studies extend the toolkit to negative binomial and ordered-probit specifications at the segment scale. Relative to national and city Vision Zero narratives, the Texas stream therefore contributes clearer data provenance and statistical methods, albeit with a narrower topical focus (pedestrian crashes) rather than a full multi-indicator safety management system. Taken together, the three layers show a complementary but uneven landscape: nation-wide Safe System frameworks set goals and funding; cities such as New York City demonstrate dense institutional coordination; and state analyses such as those in Texas supply the econometric backbone---yet a unified, SPI-based comparative evaluation across all U.S.\ states remains underdeveloped, which motivates the present study.
 
 \subsection{MCDM procedure}
 
@@ -92,8 +97,7 @@ In this study, eight indicators were applied, namely, highway safety expenditure
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{index.png}
-\caption{Safety Performance Indicator (SPI) hierarchy for US transport safety assessment.}
-\label{fig:index}
+\caption{Safety Performance Indicator (SPI) hierarchy for US transport safety assessment.\label{fig:index}}
 \end{figure}
 
 \subsection{Data sources}
@@ -269,8 +273,7 @@ In order to provide meaningful grouping results for the benchmarking process lat
 \subsubsection{Ranking}
 \begin{table}[H]
 \centering
-\caption{Transport safety scores and rankings of U.S.\ states (2016, 2019, 2022).}
-\label{tab:ranking}
+\caption{Transport safety scores and rankings of U.S.\ states (2016, 2019, 2022).\label{tab:ranking}}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{llrrrrrr}
@@ -339,8 +342,7 @@ Based on the proposed model, the transport safety scores and corresponding ranki
 \subsubsection{Grouping}
 \begin{table}[H]
 \centering
-\caption{Transport safety scores and group assignments of U.S.\ states (2016, 2019, 2022).}
-\label{tab:grouping}
+\caption{Transport safety scores and group assignments of U.S.\ states (2016, 2019, 2022).\label{tab:grouping}}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{llrrrrrr}
@@ -412,8 +414,7 @@ To facilitate a meaningful comparative analysis and identify trends in state-lev
 \subsubsubsection{Initial sensitivity}
 \begin{table}[H]
 \centering
-\caption{Rankings under alternative normalization methods (MM=MinMax, VE=Vector, ZS=Z-score).}
-\label{tab:init-sens}
+\caption{Rankings under alternative normalization methods (MM=MinMax, VE=Vector, ZS=Z-score).\label{tab:init-sens}}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{l*{9}{c}}
@@ -498,16 +499,14 @@ The initial sensitivity analysis compared rankings from the IDOCRIW-DOBI model u
 \includegraphics[width=\textwidth]{2022_IDOCRIW_line.jpg}
 \caption{2022}
 \end{subfigure}
-\caption{Ranking comparison across normalization methods (IDOCRIW weighting).}
-\label{fig:norm-line}
+\caption{Ranking comparison across normalization methods (IDOCRIW weighting).\label{fig:norm-line}}
 \end{figure}
 
 To examine the similarities among results from different methods, a correlation analysis was conducted. The correlation coefficients among rankings are significantly high, with some exceeding 0.90, which confirms the robustness of the proposed model.
 
 \begin{table}[H]
 \centering
-\caption{Correlation of rankings across normalization methods.}
-\label{tab:norm-corr}
+\caption{Correlation of rankings across normalization methods.\label{tab:norm-corr}}
 \small
 \begin{tabular}{l*{9}{c}}
 \toprule
@@ -525,8 +524,7 @@ zscore & 0.931 & 0.935 & 1.000 & 0.933 & 0.943 & 1.000 & 0.887 & 0.904 & 1.000 \
 \subsubsubsection{Intermediate uncertainty}
 \begin{table}[H]
 \centering
-\caption{Rankings under alternative weighting methods (ID=IDOCRIW, CL=CILOS, EP=Entropy).}
-\label{tab:inter-unc}
+\caption{Rankings under alternative weighting methods (ID=IDOCRIW, CL=CILOS, EP=Entropy).\label{tab:inter-unc}}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{l*{9}{c}}
@@ -611,14 +609,12 @@ To evaluate the intermediate stability of the model, we compared rankings derive
 \includegraphics[width=\textwidth]{2022_vector_line.jpg}
 \caption{2022}
 \end{subfigure}
-\caption{Ranking comparison across weighting methods (vector normalization).}
-\label{fig:weight-line}
+\caption{Ranking comparison across weighting methods (vector normalization).\label{fig:weight-line}}
 \end{figure}
 
 \begin{table}[H]
 \centering
-\caption{Correlation of rankings across weighting methods.}
-\label{tab:weight-corr}
+\caption{Correlation of rankings across weighting methods.\label{tab:weight-corr}}
 \small
 \begin{tabular}{l*{9}{c}}
 \toprule
@@ -636,8 +632,7 @@ cilos & 1.000 & 0.999 & 1.000 & 1.000 & 0.999 & 1.000 & 1.000 & 0.999 & 1.000 \\
 \subsubsubsection{Transverse stability}
 \begin{table}[H]
 \centering
-\caption{Rankings under alternative aggregation methods (DB=DOBI, TP=TOPSIS, VK=VIKOR).}
-\label{tab:trans-stab}
+\caption{Rankings under alternative aggregation methods (DB=DOBI, TP=TOPSIS, VK=VIKOR).\label{tab:trans-stab}}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{l*{9}{c}}
@@ -722,14 +717,12 @@ The model's robustness was evaluated by comparing its rankings with those derive
 \includegraphics[width=\textwidth]{2022_line.jpg}
 \caption{2022}
 \end{subfigure}
-\caption{Ranking comparison across aggregation methods.}
-\label{fig:agg-line}
+\caption{Ranking comparison across aggregation methods.\label{fig:agg-line}}
 \end{figure}
 
 \begin{table}[H]
 \centering
-\caption{Correlation of rankings across aggregation methods.}
-\label{tab:agg-corr}
+\caption{Correlation of rankings across aggregation methods.\label{tab:agg-corr}}
 \small
 \begin{tabular}{l*{9}{c}}
 \toprule
@@ -747,8 +740,7 @@ VIKOR & 0.974 & 0.949 & 1.000 & 0.971 & 0.940 & 1.000 & 0.951 & 0.879 & 1.000 \\
 \subsubsection{Comparison of grouping}
 \begin{table}[H]
 \centering
-\caption{Group assignments under DPC, KAT-DPC, and $k$-means.}
-\label{tab:group-cmp}
+\caption{Group assignments under DPC, KAT-DPC, and $k$-means.\label{tab:group-cmp}}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{l*{9}{c}}
@@ -814,8 +806,7 @@ WY & 8 & 8 & 8 & 8 & 8 & 8 & 7 & 7 & 8 \\
 
 \begin{table}[H]
 \centering
-\caption{V-measure between grouping methods.}
-\label{tab:vmeasure}
+\caption{V-measure between grouping methods.\label{tab:vmeasure}}
 \small
 \begin{tabular}{l*{9}{c}}
 \toprule
@@ -833,7 +824,6 @@ kmeans & 0.682 & 0.712 & 1 & 0.715 & 0.671 & 1 & 0.688 & 0.550 & 1 \\
 \section{Practical guidance}
 
 \subsection{Dynamic changes of SPIs}
-\missingsection
 
 \begin{figure}[H]
 \centering
@@ -885,12 +875,29 @@ kmeans & 0.682 & 0.712 & 1 & 0.715 & 0.671 & 1 & 0.688 & 0.550 & 1 \\
 \includegraphics[width=\linewidth]{X8.jpg}
 \caption{$X8$}
 \end{subfigure}
-\caption{Dynamic changes of Safety Performance Indicators ($X1$--$X8$).}
-\label{fig:spi-dyn}
+\caption{Dynamic changes of Safety Performance Indicators ($X1$--$X8$).\label{fig:spi-dyn}}
 \end{figure}
 
+Figure~\ref{fig:spi-dyn} traces each Safety Performance Indicator across U.S.\ states for 2016, 2019, and 2022. Rather than recounting fifty-one state trajectories one by one, the discussion below follows an \textbf{indicator-wise} structure: for each SPI, the national mean path is classified as steadily improving, steadily worsening, improve-then-worsen, or irregular, and distinctive state-level movers are noted.
+
+\textbf{Highway safety expenditures ($X1$/HSE).} Mean HSE rose from 2016 to 2019 and then plateaued into 2022, yielding an irregular rather than monotonic national path. Gains concentrated in states such as New York, North Carolina, Texas, Wisconsin, and Florida, whereas Illinois and California recorded large absolute reductions. Expenditure therefore behaves as a policy-driven, discretionary series: capable of sharp jumps when budgets expand, but not locked into a one-way national climb.
+
+\textbf{Registered vehicles ($X2$/RV).} The national mean of registered vehicles increased steadily across 2016--2019--2022. Florida and Texas led absolute growth, with additional gains in Tennessee, Michigan, and South Carolina; New York and Delaware were among the few with sizable declines. Overall, $X2$ exemplifies a \emph{steadily improving} (expanding) exposure-related indicator at the national scale.
+
+\textbf{Licensed drivers ($X3$/LD).} Licensed-driver counts likewise rose year by year on average. Texas, Florida, and California contributed the largest increases, while Massachusetts, Tennessee, and several smaller states edged downward. The pattern is again \emph{steadily improving}, closely tracking motorization and population growth in large Sun Belt and coastal states.
+
+\textbf{Vehicle miles traveled ($X4$/VMT).} Mean VMT improved from 2016 to 2019 but retreated by 2022---an \emph{improve-then-worsen} profile consistent with pandemic-era travel disruption and incomplete recovery. Utah posted an outsized VMT surge; Wyoming, South Dakota, West Virginia, and Vermont also rose. By contrast, Texas, Virginia, Tennessee, Wisconsin, and South Carolina saw marked VMT contractions. Among the eight SPIs, $X4$ is thus one of the most geographically polarized series.
+
+\textbf{Road length ($X5$/RL).} Average road length edged upward in each period, a mild but \emph{steadily improving} infrastructure stock measure. Arizona, Texas, Oregon, Nevada, and Louisiana expanded networks most, while California, Arkansas, Kansas, and Georgia trimmed measured road length. Changes are smaller in relative terms than for HSE or VMT, reflecting the slow-moving nature of network inventory.
+
+\textbf{Road condition ($X6$/RC).} Mean road-condition scores improved steadily (2016 $\rightarrow$ 2019 $\rightarrow$ 2022). New Jersey, California, West Virginia, Vermont, and Oklahoma registered the strongest gains; Texas, Arizona, Michigan, Maryland, and Georgia deteriorated. $X6$ therefore shows national improvement with clear state-level divergence---useful later for within-group benchmarking of pavement and maintenance practice.
+
+\textbf{Seat belt usage ($X7$/SB).} National seat-belt use rose from 2016 to 2019 and then slipped slightly by 2022 (\emph{improve-then-worsen}). Montana, South Dakota, Vermont, Maine, and Missouri improved most; Georgia, Nebraska, Oklahoma, Virginia, and South Carolina declined. Behavioral SPIs of this type remain sensitive to enforcement intensity and public-communication campaigns.
+
+\textbf{Fatality rate ($X8$/FR).} As the sole cost-type criterion, lower values are better. The national mean fatality rate fell from 2016 to 2019 but rebounded above the 2016 level by 2022---again \emph{improve-then-worsen}, and the most safety-critical irregularity in the panel. Delaware, Washington, West Virginia, Virginia, and New Mexico worsened most; Idaho, Alabama, Iowa, Kentucky, and Alaska improved. The post-2019 deterioration underscores why composite scores cannot be read from exposure growth alone.
+
+
 \subsection{De-construction of composite index}
-\missingsection
 
 \begin{figure}[H]
 \centering
@@ -911,22 +918,56 @@ kmeans & 0.682 & 0.712 & 1 & 0.715 & 0.671 & 1 & 0.688 & 0.550 & 1 \\
 \includegraphics[width=\linewidth]{2022_DOBI.jpg}
 \caption{2022}
 \end{subfigure}
-\caption{De-construction of the DOBI composite index.}
-\label{fig:deconstruct}
+\caption{De-construction of the DOBI composite index.\label{fig:deconstruct}}
 \end{figure}
 
+Figure~\ref{fig:deconstruct} decomposes each state's DOBI composite into indicator contributions (IDOCRIW-weighted, row-normalized shares). Focusing on 2022, the paragraphs below highlight---state by state---which SPIs dominate the achievement of leading and otherwise instructive jurisdictions.
+
+\textbf{California.} California's top-tier composite is driven mainly by exposure and activity scale: vehicle miles traveled ($X4$, about 26\%), licensed drivers ($X3$, about 25\%), and registered vehicles ($X2$, about 21\%). In short, CA's lead is less a story of a single behavioral SPI than of sustained high mobility stock coupled with comparatively strong seat-belt performance in the raw data.
+
+\textbf{Texas.} Texas shows a different mix: highway safety expenditures ($X1$, about 26\%), licensed drivers ($X3$, about 22\%), and road length ($X5$, about 21\%) form the backbone of its composite. Relative to California, Texas leans more on fiscal commitment and network extent than on VMT share---an important distinction when interpreting why its ranking remains high even when selected exposure series move adversely.
+
+\textbf{Florida.} Florida's score is anchored by VMT ($X4$, about 27\%), HSE ($X1$, about 22\%), and licensed drivers ($X3$, about 21\%). The triad indicates a balanced large-state profile: travel demand, safety budgeting, and driver population jointly sustain the composite.
+
+\textbf{New York.} New York is the clearest expenditure-led case among top states: HSE alone accounts for roughly 37\% of its 2022 composite, followed by licensed drivers and VMT. The deconstruction therefore flags safety investment as New York's principal ``source of achievement,'' consistent with intensive Vision Zero-era budgeting in the broader New York institutional setting.
+
+\textbf{Pennsylvania and Illinois.} Both Midwestern leaders rely on a similar HSE--VMT--LD core (HSE the single largest slice in each). Pennsylvania's HSE share (about 32\%) is especially pronounced, whereas Illinois is somewhat more evenly split among HSE, VMT, and LD. Their composites thus read as investment-plus-exposure packages rather than road-condition or fatality-rate specialties.
+
+\textbf{Ohio and North Carolina.} Ohio and North Carolina illustrate VMT-led mid-to-upper composites: VMT is the largest contributor in both (about 23--26\%), with HSE and LD close behind. Achievement here is tied to travel intensity and accompanying driver/expenditure bases.
+
+\textbf{Utah (contrast case).} Utah is instructive precisely because its composite is unusually concentrated: VMT contributes about 70\% of the 2022 share. The state's recent rise in the ranking/grouping tables is therefore almost single-factor in origin---a sharp VMT expansion---rather than a broad-based improvement across behavioral and infrastructure SPIs.
+
+\textbf{Low-tier contrasts (Alaska, Vermont, District of Columbia).} At the bottom of the distribution, composites are small and structurally different. Alaska's limited score still leans on HSE; Vermont's residual composition is VMT-heavy; the District of Columbia's tiny composite is disproportionately linked to the fatality-rate component in relative share terms. These patterns caution that ``achievement sources'' among weak performers are not templates to copy, but diagnostics of thin overall capacity.
+
+
 \subsection{De-composition of score changes}
-\missingsection
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{DOBI_change_2016to2022.jpg}
-\caption{De-composition of DOBI score changes from 2016 to 2022.}
-\label{fig:decompose}
+\caption{De-composition of DOBI score changes from 2016 to 2022.\label{fig:decompose}}
 \end{figure}
 
+Figure~\ref{fig:decompose} attributes each state's 2016--2022 DOBI change to indicator-level increments and decrements. The following state-focused paragraphs emphasize the main SPI sources of improvement or deterioration.
+
+\textbf{Florida (increase).} Florida records one of the largest composite gains. The uplift is associated primarily with growth in VMT and registered vehicles (and accompanying licensed-driver expansion in the raw series). Put differently, Florida's improvement is demand- and fleet-driven: rising mobility stocks translated into a higher weighted composite, even though seat-belt use and fatality rate did not move uniformly in a favorable direction.
+
+\textbf{Utah (increase).} Utah's sharp rise is overwhelmingly a VMT story. Weighted decomposition assigns the bulk of the positive change to $X4$, matching the raw surge of more than 250 thousand VMT units. Secondary contributions from registered vehicles are minor by comparison. Utah therefore exemplifies a state whose ranking/group jump is powered by a single exposure indicator rather than a balanced SPI package.
+
+\textbf{North Carolina (increase).} North Carolina improves through a combination of VMT and highway safety expenditures, with road-condition and road-length components providing smaller offsets. The dual engine---travel growth plus HSE expansion---makes NC a more diversified improver than Utah.
+
+\textbf{Texas (decrease).} Despite remaining a top-ranked state, Texas posts a sizable composite decline from 2016 to 2022. The deterioration coincides with a large raw VMT contraction and worsening road condition and fatality rate, which together outweigh continued growth in HSE, licensed drivers, and road length. In decomposition terms, exposure- and severity-related SPIs dominate the downward move: Texas did not ``fall out'' of the top tier, but its lead narrowed as VMT and safety outcomes softened.
+
+\textbf{Virginia (decrease).} Virginia's decline is among the steepest. Falling VMT and licensed drivers, together with a pronounced rise in the fatality rate, are the principal adverse sources; modest HSE and fleet growth were insufficient to compensate. Virginia thus illustrates how a mid/high performer can slip when both activity and severity indicators deteriorate simultaneously.
+
+\textbf{Tennessee (decrease).} Tennessee's lower composite is likewise tied to reduced VMT and weaker licensed-driver counts, even as registered vehicles and HSE increased. The net message is that fleet expansion alone does not preserve the composite when travel and driver stocks move the other way.
+
+\textbf{Wisconsin and Illinois (decrease).} Wisconsin's decline reflects VMT reduction paired with compositional shifts in HSE and road length; Illinois is distinctive for a large absolute HSE cut alongside softer VMT. Both cases show that fiscal SPI reversals (HSE) can amplify exposure-driven losses in the Midwest.
+
+\textbf{California and New York (mild decrease).} California and New York remain leaders but edge downward. California's soft move aligns with lower HSE and VMT against gains in drivers and road condition; New York's change is tempered by a very large HSE increase that only partially offsets weaker registered-vehicle and VMT readings. Their decompositions caution that even top states experience indicator-level trade-offs beneath a still-high composite.
+
+
 \subsection{Benchmarking}
-\missingsection
 
 \begin{figure}[H]
 \centering
@@ -978,9 +1019,27 @@ kmeans & 0.682 & 0.712 & 1 & 0.715 & 0.671 & 1 & 0.688 & 0.550 & 1 \\
 \includegraphics[width=\linewidth]{{"DPC_2022_group 8.jpg"}}
 \caption{Group 8}
 \end{subfigure}
-\caption{Benchmarking radar charts by KAT-DPC group (2022).}
-\label{fig:benchmark}
+\caption{Benchmarking radar charts by KAT-DPC group (2022).\label{fig:benchmark}}
 \end{figure}
+
+Figure~\ref{fig:benchmark} displays 2022 SPI radar profiles for each KAT-DPC group. Benchmarking is conducted \textbf{within groups}: a state is treated as a template on an indicator when it leads its peer cluster, so that similar-capacity jurisdictions can borrow practice rather than chasing incomparable national giants.
+
+\textbf{Group 1 (California, Florida, New York, Texas).} Among the top cluster, California is the within-group template for registered vehicles, licensed drivers, VMT, and seat-belt use; Texas leads highway safety expenditures and road length; Florida leads road condition; New York posts the lowest fatality rate. Template practices therefore specialize: California for demand-management and occupant-protection culture; Texas for sustained safety budgeting and network coverage; Florida for pavement/condition programs; New York for fatality-reduction packages associated with dense Vision Zero-style speed and street interventions.
+
+\textbf{Group 2 (Georgia, Illinois, Michigan, North Carolina, Ohio, Pennsylvania, Utah).} Pennsylvania and Illinois are expenditure and driver-stock benchmarks; Ohio leads registered vehicles; Utah is the stand-out template for VMT growth and for the lowest fatality rate in the group; Georgia leads road condition; Illinois leads seat-belt use. For peers in this band, Utah's recent VMT-linked rise and Illinois/Pennsylvania safety-investment profiles are the most transferable reference points.
+
+\textbf{Group 3 (Arizona, Indiana, Maryland, Massachusetts, New Jersey, Virginia, Washington).} Virginia leads HSE; Washington leads registered vehicles and seat-belt use; New Jersey leads licensed drivers; Indiana is a multi-indicator template for VMT, road length, and road condition; Massachusetts achieves the lowest fatality rate. Indiana's infrastructure-condition package and Massachusetts' severity outcome are particularly useful templates for other mid-Atlantic and New England states in the group.
+
+\textbf{Group 4 (Alabama, Colorado, Iowa, Kansas, Minnesota, Missouri, Oklahoma, Tennessee, Wisconsin).} Minnesota emerges as a broad template---leading HSE, road length, and lowest fatality rate---while Tennessee leads fleet and driver counts, Missouri leads VMT, Alabama leads road condition, and Iowa leads seat-belt use. Minnesota's combination of investment, network, and low FR offers the closest ``all-round'' practice model inside this Midwestern/Southern mix.
+
+\textbf{Group 5 (Arkansas, Connecticut, Kentucky, Louisiana, Mississippi, Nevada, Oregon, South Carolina).} South Carolina leads HSE, registered vehicles, and licensed drivers; Louisiana leads VMT; Arkansas leads road length and road condition; Oregon leads seat-belt use; Connecticut records the lowest fatality rate. Template reading: South Carolina for scale indicators within the group, Oregon for behavioral compliance campaigns, Connecticut for severity control.
+
+\textbf{Group 6 (Idaho, Montana, Nebraska, New Mexico, North Dakota).} Nebraska leads HSE and road length; Montana leads registered vehicles and seat-belt use; New Mexico leads licensed drivers and VMT; Idaho leads road condition; North Dakota achieves the lowest fatality rate. Sparse-population peers can look to Idaho/North Dakota for condition and severity outcomes, and to Montana for occupant-protection practice.
+
+\textbf{Group 7 (South Dakota, West Virginia, Wyoming).} West Virginia dominates most stock indicators (HSE, vehicles, drivers, seat belts); Wyoming leads VMT and road condition; South Dakota leads road length and posts the group's lowest fatality rate. Benchmarking here is necessarily local: West Virginia as the investment/fleet anchor, Wyoming for condition under high VMT, South Dakota for relative severity performance.
+
+\textbf{Group 8 (Alaska, Delaware, District of Columbia, Hawaii, Maine, New Hampshire, Rhode Island, Vermont).} Alaska leads HSE; New Hampshire leads vehicles and drivers; Vermont leads VMT and road condition; Maine leads road length; Hawaii leads seat-belt use; Rhode Island achieves the lowest fatality rate. For this small-state/coastal cluster, Hawaii's belt-use practice and Rhode Island's fatality outcome are the clearest behavioral/severity templates, while Vermont offers a compact infrastructure-condition reference.
+
 
 \section{Conclusion and further studies}
 
@@ -1009,6 +1068,115 @@ Future research could explore the following avenues:
 By addressing these directions, future studies can build on this work to create even more robust and versatile tools for transport safety planning.
 
 \section*{References}
-\missingsection
+\begin{thebibliography}{99}
+
+\bibitem{zavadskas2016}
+Zavadskas, E.~K., \& Podvezko, V. (2016).
+Integrated determination of objective criteria weights in MCDM.
+\textit{International Journal of Information Technology \& Decision Making}, \textit{15}(2), 267--283.
+Also related: Zavadskas, E.~K., \& Podvezko, V. (2016).
+The recalculation of the weights of criteria in MCDM methods using the Bayes approach.
+\textit{Symmetry}, \textit{8}(6), 205.
+\url{https://doi.org/10.3390/sym10060205}
+
+\bibitem{dobi2022}
+Ecer, F., \& Pamucar, D. (2022).
+A novel LOPCOW-DOBI multi-criteria sustainability performance assessment methodology: An application in developing country banking sector.
+\textit{Omega}, \textit{112}, 102690.
+\url{https://doi.org/10.1016/j.omega.2022.102690}
+
+\bibitem{rodriguez2014}
+Rodriguez, A., \& Laio, A. (2014).
+Clustering by fast search and find of density peaks.
+\textit{Science}, \textit{344}(6191), 1492--1496.
+\url{https://doi.org/10.1126/science.1242072}
+
+\bibitem{fix1951}
+Fix, E., \& Hodges, J.~L. (1951).
+\textit{Discriminatory analysis: Nonparametric discrimination: Consistency properties}
+(Report No.\ 4). USAF School of Aviation Medicine.
+
+\bibitem{cover1967}
+Cover, T., \& Hart, P. (1967).
+Nearest neighbor pattern classification.
+\textit{IEEE Transactions on Information Theory}, \textit{13}(1), 21--27.
+
+\bibitem{bernhardt2021}
+Bernhardt, M., \& Kockelman, K. (2021).
+An analysis of pedestrian crash trends and contributing factors in Texas.
+\textit{Journal of Transport \& Health}, \textit{22}, 101090.
+\url{https://doi.org/10.1016/j.jth.2021.101090}
+
+\bibitem{nhtsa2024}
+National Center for Statistics and Analysis. (2024).
+\textit{Traffic safety facts 2022: A compilation of motor vehicle traffic crash data}
+(Report No.\ DOT HS 813 656).
+National Highway Traffic Safety Administration.
+\url{https://crashstats.nhtsa.dot.gov/}
+
+\bibitem{nhtsa_seatbelt}
+National Highway Traffic Safety Administration. (various years).
+\textit{Seat belt use in the states and territories} (use-rate reports).
+\url{https://www.nhtsa.gov/risky-driving/seat-belts}
+
+\bibitem{bts}
+U.S. Bureau of Transportation Statistics. (2021--2022).
+\textit{State transportation statistics} / National Transportation Statistics.
+\url{https://www.bts.gov/}
+\url{https://www.bts.gov/product/state-transportation-statistics}
+
+\bibitem{fars}
+National Highway Traffic Safety Administration. (n.d.).
+\textit{Fatality Analysis Reporting System (FARS)}.
+\url{https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars}
+
+\bibitem{txdot_cris}
+Texas Department of Transportation. (n.d.).
+\textit{Crash Records Information System (CRIS)}.
+\url{https://www.txdot.gov/data-maps/crash-reports-records.html}
+
+\bibitem{nrss2022}
+U.S. Department of Transportation. (2022).
+\textit{National Roadway Safety Strategy}.
+\url{https://www.transportation.gov/nrss}
+
+\bibitem{ss4a}
+U.S. Department of Transportation. (n.d.).
+\textit{Safe Streets and Roads for All (SS4A) Grant Program}.
+\url{https://www.transportation.gov/grants/SS4A}
+
+\bibitem{fhwa_safesystem}
+Federal Highway Administration. (n.d.).
+\textit{Safe System approach --- An approach toward zero traffic deaths}.
+\url{https://highways.dot.gov/safety/zero-deaths/safe-system-approach-toward-zero-traffic-deaths}
+
+\bibitem{visionzero_nyc}
+City of New York. (2014--present).
+\textit{Vision Zero} (Task Force reports and Mayor's Management Report chapters).
+\url{https://www.nyc.gov/content/visionzero/pages/}
+\url{https://www.nyc.gov/site/operations/performance/mmr.page}
+
+\bibitem{visionzero_network}
+Vision Zero Network. (2016--2017).
+\textit{Collaborating across departments to achieve Vision Zero};
+\textit{Prioritizing internal city coordination to advance and track Vision Zero} (NYC case study).
+\url{https://visionzeronetwork.org/}
+
+\bibitem{tzd}
+Toward Zero Deaths. (n.d.).
+\textit{National strategy on highway safety}.
+\url{https://www.towardzerodeaths.org/}
+
+\bibitem{hwangyoon}
+Hwang, C.~L., \& Yoon, K. (1981).
+\textit{Multiple attribute decision making: Methods and applications}.
+Springer.
+
+\bibitem{opricovic1998}
+Opricovic, S. (1998).
+\textit{Multicriteria optimization of civil engineering systems}.
+Faculty of Civil Engineering, Belgrade.
+
+\end{thebibliography}
 
 \end{document}

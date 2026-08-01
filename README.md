@@ -32,13 +32,13 @@ This project addresses those gaps with an **IDOCRIW–DOBI–KAT-DPC** pipeline.
 | Section | Topic | Status in draft |
 |---------|-------|-----------------|
 | 1 | Introduction | Complete |
-| 2 | Literature review (institutional capacity; MCDM uncertainty; DPC) | §2.1 pending |
+| 2 | Literature review (institutional capacity; MCDM uncertainty; DPC) | Complete |
 | 3 | Data (SPI index, NHTSA/BTS sources) | Complete |
 | 4 | Methodology (IDOCRIW, DOBI, KAT-DPC, full 9-step pipeline) | Complete |
 | 5 | Results & robustness (ranking, grouping, sensitivity) | Complete |
-| 6 | Practical guidance (SPI dynamics, deconstruction, decomposition, benchmarking) | Figures in place; text pending |
+| 6 | Practical guidance (SPI dynamics, deconstruction, decomposition, benchmarking) | Complete |
 | 7 | Conclusion, contributions, limitations, future work | Complete |
-| — | Abstract & References | Pending |
+| — | Abstract & References | Complete |
 
 ---
 
@@ -166,8 +166,9 @@ python clustering_DPC_remodified.py
 
 ```bash
 cd thesis
-pdflatex thesis.tex   # run twice for TOC / refs
-# Intermediate files (*.aux, *.log, *.out, *.toc) can be deleted after build
+pdflatex thesis.tex
+pdflatex thesis.tex   # second pass required for Contents + Figure/Table numbers
+# Optional: delete intermediates (*.aux, *.log, *.out, *.toc) after a successful two-pass build
 ```
 
 Requires a TeX distribution with `graphicx`, `amsmath`, `booktabs`, `multirow`, `subcaption`, `hyperref`, etc. Figures are pulled from [`outputs/`](outputs/) via `\graphicspath` in `thesis.tex`.
