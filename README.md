@@ -1,6 +1,6 @@
 # US Transportation Safety Analysis
 
-**Thesis:** [`thesis/thesis.tex`](thesis/thesis.tex) → [`thesis/thesis.pdf`](thesis/thesis.pdf)
+**Thesis:** [`thesis/thesis.pdf`](thesis/thesis.pdf)
 
 Multi-Criteria Decision Making (MCDM) framework for evaluating and clustering US state-level transportation safety performance. Core pipeline: **IDOCRIW** (weighting) → **DOBI** (aggregation) → **KAT-DPC** (clustering with KNN-density and adaptive thresholding).
 
@@ -73,28 +73,28 @@ Raw files live in [`data/raw/`](data/raw/) (multi-year workbook, year extracts, 
 
 ### IDOCRIW (Zavadskas & Podvezko, 2016)
 
-Hybrid objective weighting combining **Entropy** and **CILOS**: vector normalization → entropy weights → impact-loss / CILOS weights → combined \(\omega_j\).
+Hybrid objective weighting combining **Entropy** and **CILOS**: vector normalization → entropy weights → impact-loss / CILOS weights → combined ωⱼ.
 
 ### DOBI (DOmbi Bonferroni)
 
-Nonlinear aggregation via Dombi norms and Bonferroni means. Produces weighted averaging (\(Z1\)) and geometric (\(Z2\)) scores, then an integrated \(\mathfrak{R}_i\) ranked descending. Adjustable risk parameters \((\psi_1,\psi_2,\zeta,\delta)\); more robust to extremes than TOPSIS/AHP-style linear schemes.
+Nonlinear aggregation via Dombi norms and Bonferroni means. Produces weighted averaging (Z1) and geometric (Z2) scores, then an integrated ℜᵢ ranked descending. Adjustable risk parameters (ψ₁, ψ₂, ζ, δ); more robust to extremes than TOPSIS/AHP-style linear schemes.
 
 ### KAT-DPC
 
 Enhancements over Rodriguez & Laio (2014) DPC:
 
-- **KNN density:** \(\rho_i = 1/\mathrm{mean}(d_{i,\mathrm{KNN}})\) (\(k=5\))
+- **KNN density:** ρᵢ = 1 / mean(dᵢ,ₖₙₙ) (k = 5)
 - **Delta:** minimum distance to a higher-density point
-- **Automated centers:** \(\gamma_i=\rho_i\delta_i\), elbow via KneeLocator (target ~8–9 clusters)
+- **Automated centers:** γᵢ = ρᵢ × δᵢ, elbow via KneeLocator (target ~8–9 clusters)
 - **K-means refinement** with density-aware noise reassignment
 - Groups relabeled by average DOBI score (Group 1 = best)
 
 ### Full Pipeline (9 Steps)
 
-1. Build decision matrix \(A\)
+1. Build decision matrix A
 2. Vector-normalize (inverse transform for cost criterion X8)
 3. Weight with IDOCRIW
-4. Aggregate with DOBI → rank by \(\mathfrak{R}_i\)
+4. Aggregate with DOBI → rank by ℜᵢ
 5. KNN density estimation
 6. Delta calculation
 7. Automated center selection
@@ -113,12 +113,12 @@ Implementation: [`src/`](src/) (`weighting_IDOCRIW.py`, `aggregating_DOBI.py`, `
 
 **Robustness:**
 
-- *Initial sensitivity* — MinMax / Vector / Z-score normalization: correlations mostly \(>0.90\)
-- *Intermediate uncertainty* — IDOCRIW / CILOS / Entropy: correlations \(\gtrsim 0.95\)
+- *Initial sensitivity* — MinMax / Vector / Z-score normalization: correlations mostly > 0.90
+- *Intermediate uncertainty* — IDOCRIW / CILOS / Entropy: correlations ≳ 0.95
 - *Transverse stability* — DOBI vs TOPSIS / VIKOR: strong agreement on top/bottom states
-- *Grouping* — DPC vs KAT-DPC vs \(k\)-means, with V-measure tables
+- *Grouping* — DPC vs KAT-DPC vs k-means, with V-measure tables
 
-**Practical guidance (figures ready; narrative TBD):** SPI time paths, DOBI deconstruction maps, 2016→2022 score-change decomposition, and 2022 group-level radar benchmarks.
+**Practical guidance:** SPI time paths, DOBI deconstruction, 2016→2022 score-change decomposition, and within-group benchmarking templates.
 
 ---
 
@@ -126,14 +126,13 @@ Implementation: [`src/`](src/) (`weighting_IDOCRIW.py`, `aggregating_DOBI.py`, `
 
 ```
 ├── thesis/
-│   ├── thesis.tex          # LaTeX source (synced from Word draft)
-│   └── thesis.pdf          # Compiled PDF
+│   └── thesis.pdf          # Thesis PDF
 ├── src/                    # Analysis pipeline (Python)
 ├── data/
 │   ├── raw/                # Original transport safety data
 │   └── processed/          # Normalized / weighted / aggregated / grouped results
 ├── outputs/
-│   ├── figures/            # Charts referenced by thesis.tex
+│   ├── figures/            # Charts used in the thesis
 │   └── robustness/         # Sensitivity analysis outputs
 └── docs/
     ├── improvement/        # Algorithm notes (DOBI, DPC)
@@ -161,17 +160,6 @@ python weighting_IDOCRIW.py
 python aggregating_DOBI.py
 python clustering_DPC_remodified.py
 ```
-
-## Compiling the Thesis
-
-```bash
-cd thesis
-pdflatex thesis.tex
-pdflatex thesis.tex   # second pass required for Contents + Figure/Table numbers
-# Optional: delete intermediates (*.aux, *.log, *.out, *.toc) after a successful two-pass build
-```
-
-Requires a TeX distribution with `graphicx`, `amsmath`, `booktabs`, `multirow`, `subcaption`, `hyperref`, etc. Figures are pulled from [`outputs/`](outputs/) via `\graphicspath` in `thesis.tex`.
 
 ## Setup
 
